@@ -1,11 +1,12 @@
 package ru.liner.vr360player.server;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import ru.liner.vr360player.asocket.ASocket;
 import ru.liner.vr360player.asocket.ISocket;
@@ -13,8 +14,10 @@ import ru.liner.vr360player.asocket.udp.UDPServer;
 import ru.liner.vr360player.server.packet.DeviceConnectPacket;
 import ru.liner.vr360player.server.packet.DeviceDisconnectPacket;
 import ru.liner.vr360player.server.packet.DevicePacket;
-import ru.liner.vr360player.server.packet.Packet;
+import ru.liner.vr360player.utils.Comparator;
 import ru.liner.vr360player.utils.Constant;
+import ru.liner.vr360player.utils.Lists;
+import ru.liner.vr360player.utils.Networks;
 
 /**
  * @author : "Line'R"
@@ -23,10 +26,10 @@ import ru.liner.vr360player.utils.Constant;
  **/
 public class IPConnectionManger {
     private final ASocket socket;
-    private final Callback callback;
+    private final List<DeviceConnectPacket> connectedDevices;
 
     public IPConnectionManger(Callback callback) {
-        this.callback = callback;
+        this.connectedDevices = new ArrayList<>();
         socket = new ASocket(new UDPServer(Constant.TCP_CONNECTION_PORT));
         socket.setOnSocketStateListener(new ISocket.OnSocketStateListener() {
             @Override
@@ -46,13 +49,22 @@ public class IPConnectionManger {
         });
         socket.setOnMessageReceivedListener(data -> {
             String stringData = new String(data, StandardCharsets.UTF_8);
-            if(stringData.contains(DeviceConnectPacket.class.getSimpleName())){
-                callback.onDeviceConnected(new Gson().fromJson(stringData, DeviceConnectPacket.class));
+            if (stringData.contains(DeviceConnectPacket.class.getSimpleName())) {
+                DeviceConnectPacket packet = new Gson().fromJson(stringData, DeviceConnectPacket.class);
+                if (!isDeviceConnected(packet.host)) {
+                    connectedDevices.add(packet);
+                    callback.onDeviceConnected(packet);
+                }
             }
-            if(stringData.contains(DeviceDisconnectPacket.class.getSimpleName())){
-                callback.onDeviceDisconnected(new Gson().fromJson(stringData, DeviceDisconnectPacket.class));
+            if (stringData.contains(DeviceDisconnectPacket.class.getSimpleName())) {
+                DeviceDisconnectPacket disconnectPacket = new Gson().fromJson(stringData, DeviceDisconnectPacket.class);
+                int index = indexOf(disconnectPacket.host);
+                if (index != -1) {
+                    connectedDevices.remove(index);
+                    callback.onDeviceDisconnected(disconnectPacket);
+                }
             }
-            if(stringData.contains(DevicePacket.class.getSimpleName())){
+            if (stringData.contains(DevicePacket.class.getSimpleName())) {
                 callback.onDeviceChanged(new Gson().fromJson(stringData, DevicePacket.class));
             }
             callback.onRawDataReceived(data);
@@ -67,6 +79,35 @@ public class IPConnectionManger {
         socket.closeAndQuit();
     }
 
+    public List<DeviceConnectPacket> getConnectedDevices() {
+        return connectedDevices;
+    }
+
+    public ASocket getSocket() {
+        return socket;
+    }
+
+    public boolean isDeviceConnected(@NonNull String host) {
+        if(!Networks.isValidHost(host))
+            return false;
+        return Lists.contains(connectedDevices, new Comparator<DeviceConnectPacket, String>(host) {
+            @Override
+            public boolean compare(DeviceConnectPacket one, String other) {
+                return one.host.equals(other);
+            }
+        });
+    }
+
+    public int indexOf(@NonNull String host) {
+        if(!Networks.isValidHost(host))
+            return -1;
+        return Lists.indexOf(connectedDevices, new Comparator<DeviceConnectPacket, String>(host) {
+            @Override
+            public boolean compare(DeviceConnectPacket one, String other) {
+                return one.host.equals(other);
+            }
+        });
+    }
 
     public interface Callback {
         void onConnectionCreated();

@@ -1,5 +1,7 @@
 package ru.liner.vr360player.utils;
 
+import android.text.TextUtils;
+
 import androidx.annotation.Nullable;
 
 import java.net.Inet4Address;
@@ -7,6 +9,8 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author : "Line'R"
@@ -31,5 +35,13 @@ public class Networks {
             ex.printStackTrace();
             return null;
         }
+    }
+
+    public static boolean isValidHost(String host){
+        if(TextUtils.isEmpty(host))
+            return false;
+        Pattern pattern = Pattern.compile("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+        Matcher matcher = pattern.matcher(host);
+        return matcher.find();
     }
 }

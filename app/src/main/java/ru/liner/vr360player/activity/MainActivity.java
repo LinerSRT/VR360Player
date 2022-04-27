@@ -24,6 +24,7 @@ import ru.liner.vr360player.utils.Networks;
 import ru.liner.vr360player.views.LImageButton;
 
 
+@SuppressWarnings("FieldCanBeLocal")
 @SuppressLint("WrongConstant")
 public class MainActivity extends CoreActivity implements IPConnectionManger.Callback{
     private LImageButton syncDeicesButton;
@@ -66,8 +67,10 @@ public class MainActivity extends CoreActivity implements IPConnectionManger.Cal
 
     @Override
     public void onDeviceConnected(DeviceConnectPacket packet) {
-        genericAdapter.add(packet);
-        recyclerView.scrollToPosition(genericAdapter.getItemCount()-1);
+        if(!genericAdapter.getItemsList().contains(packet)) {
+            genericAdapter.add(packet);
+            recyclerView.scrollToPosition(genericAdapter.getItemCount() - 1);
+        }
         
     }
 
