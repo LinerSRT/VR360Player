@@ -51,19 +51,35 @@
     </LinearLayout>
 
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/deviceRecycler"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
+    <TextView
+        android:id="@+id/noDevicesWarn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No connected devices"
+        android:elevation="4dp"
+        android:drawableTop="@drawable/ic_baseline_warning_24"
+        android:textSize="14sp"
+        android:textColor="@color/textColorSecondary"
         app:layout_constraintBottom_toBottomOf="parent"
-        tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/device_list_binder"
-        tools:itemCount="10"
-        tools:orientation="vertical"
-        tools:scrollbars="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/deviceRecycler"
+        style="@style/ScrollbarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout"
+        tools:itemCount="10"
+        tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/device_list_binder"
+        tools:orientation="vertical"
+        tools:scrollbars="vertical" />
 
     <ru.liner.vr360server.views.LImageButton
         android:layout_width="wrap_content"

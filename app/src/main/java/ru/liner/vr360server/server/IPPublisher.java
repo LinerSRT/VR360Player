@@ -46,8 +46,11 @@ public class IPPublisher extends Thread {
     @Override
     public void run() {
         while (!isInterrupted() && udpMulticast != null) {
-            udpMulticast.writeString(Objects.requireNonNull(Networks.getLocalIpAddress()));
-            Utils.sleep(TimeUnit.SECONDS.toMillis(1));
+            String localhost = Networks.getLocalIpAddress();
+            if(localhost != null){
+                udpMulticast.writeString(localhost);
+                Utils.sleep(TimeUnit.SECONDS.toMillis(1));
+            }
         }
     }
 }

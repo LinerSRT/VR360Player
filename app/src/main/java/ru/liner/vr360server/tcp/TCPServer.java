@@ -1,11 +1,16 @@
 package ru.liner.vr360server.tcp;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+
+import ru.liner.vr360server.utils.Networks;
 
 /**
  * @author : "Line'R"
@@ -44,18 +49,47 @@ public class TCPServer implements Runnable {
                     startClient(server.accept());
                 } catch (IOException e) {
                     e.printStackTrace();
-                    if(itcpCallback != null)
+                    if (itcpCallback != null)
                         itcpCallback.onConnectionFailed(server.getInetAddress());
                 }
             }
             tcpDeviceList.forEach(TCPDevice::stop);
             tcpDeviceList.clear();
             server.close();
-            if(itcpCallback != null)
+            if (itcpCallback != null)
                 itcpCallback.onDisconnected(server.getInetAddress());
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+
+    public List<TCPDevice> getClients() {
+        return tcpDeviceList;
+    }
+
+    @Nullable
+    public TCPDevice getClient(@NonNull String hostname) {
+        for (TCPDevice device : tcpDeviceList)
+            if (Networks.getHost(device.getInetAddress()).equals(hostname))
+                return device;
+        return null;
+    }
+
+    public void disconnectClient(@NonNull String hostname){
+        TCPDevice device = getClient(hostname);
+        if(device != null){
+            device.stop();
+            tcpDeviceList.remove(device);
+        }
+    }
+
+    public void sendToAll(String string){
+        tcpDeviceList.forEach(tcpDevice -> tcpDevice.send(string));
+    }
+
+    public void sendToAll(byte[] bytes){
+        tcpDeviceList.forEach(tcpDevice -> tcpDevice.send(bytes));
     }
 
 
@@ -64,39 +98,41 @@ public class TCPServer implements Runnable {
         ITCPCallback callback = new ITCPCallback() {
             @Override
             public void onConnected(TCPDevice device) {
-                if(itcpCallback != null)
-                itcpCallback.onConnected(device);
+                if (itcpCallback != null)
+                    itcpCallback.onConnected(device);
             }
 
             @Override
             public void onDisconnected(InetAddress inetAddress) {
                 tcpDeviceList.remove(tcpDevice);
-                if(itcpCallback != null)
-                itcpCallback.onDisconnected(inetAddress);
+                if (itcpCallback != null)
+                    itcpCallback.onDisconnected(inetAddress);
             }
 
             @Override
             public void onConnectionFailed(InetAddress inetAddress) {
-                if(itcpCallback != null)
-                itcpCallback.onConnectionFailed(inetAddress);
+                if (itcpCallback != null)
+                    itcpCallback.onConnectionFailed(inetAddress);
             }
 
             @Override
             public void onReceived(InetAddress inetAddress, byte[] data) {
-                if(itcpCallback != null)
-                itcpCallback.onReceived(inetAddress, data);
+                if (itcpCallback != null)
+                    itcpCallback.onReceived(inetAddress, data);
             }
 
             @Override
             public void onReceived(InetAddress inetAddress, String data) {
-                if(itcpCallback != null)
-                itcpCallback.onReceived(inetAddress, data);
+                if (itcpCallback != null)
+                    itcpCallback.onReceived(inetAddress, data);
             }
         };
         tcpDevice.setITCPCallback(callback);
         tcpDevice.start();
-        tcpDeviceList.add(tcpDevice);
-        if(itcpCallback != null)
-            itcpCallback.onConnected(tcpDevice);
+        if(!tcpDeviceList.contains(tcpDevice)) {
+            tcpDeviceList.add(tcpDevice);
+            if (itcpCallback != null)
+                itcpCallback.onConnected(tcpDevice);
+        }
     }
 }

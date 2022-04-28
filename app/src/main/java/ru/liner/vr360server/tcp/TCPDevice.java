@@ -81,7 +81,7 @@ public class TCPDevice implements Runnable{
         }
         if(itcpCallback != null && connected)
             itcpCallback.onConnected(this);
-        while (connected){
+        while (connected && (!socket.isClosed() || !socket.isInputShutdown())){
            try {
                int dataLength = inputStream.available();
                if(dataLength > 0){
@@ -114,4 +114,6 @@ public class TCPDevice implements Runnable{
     public InetAddress getInetAddress() {
         return inetAddress;
     }
+
+
 }

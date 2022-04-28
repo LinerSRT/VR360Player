@@ -16,7 +16,7 @@ import java.util.Map;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class MediaStreamingServer extends NanoHTTPD {
-    private String mediaFilePath;
+    private final String mediaFilePath;
     private final int port;
 
     public MediaStreamingServer(String mediaFilePath, int port) {
@@ -25,31 +25,6 @@ public class MediaStreamingServer extends NanoHTTPD {
         this.port = port;
     }
 
-    public MediaStreamingServer(int port) {
-        super(port);
-        this.mediaFilePath = null;
-        this.port = port;
-    }
-
-    @Override
-    public void start() throws IOException {
-        if (mediaFilePath == null)
-            return;
-        super.start();
-    }
-
-    public void setFilePath(String mediaFilePath) {
-        closeAllConnections();
-        stop();
-        this.mediaFilePath = mediaFilePath;
-        if (isAlive()) {
-            try {
-                start();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
     @Override
     public Response serve(IHTTPSession session) {
