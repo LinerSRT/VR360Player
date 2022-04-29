@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:animateLayoutChanges="true"
+    android:layout_height="match_parent"
     android:orientation="vertical">
 
 
@@ -24,42 +25,154 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:keepScreenOn="true"
             android:text="@string/app_name"
             android:textColor="@color/textColor"
             android:textSize="22sp" />
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="Sync devices"
-            android:textColor="@color/textColor"
-            android:textSize="16sp" />
+    </LinearLayout>
 
-        <ru.liner.vr360server.views.LImageButton
-            android:id="@+id/syncDevicesButton"
-            android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/streamingInfoLayout"
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:layout_width="match_parent"
+        android:background="@color/accentColorSecondary"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/circle"
-            android:padding="8dp"
-            android:src="@drawable/ic_baseline_sync_24" />
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
+                android:drawableStart="@drawable/ic_baseline_info_24"
+                android:drawablePadding="4dp"
+                android:keepScreenOn="false"
+                android:text="Streaming started at:"
+                android:textColor="@color/textColor"
+                android:textSize="14sp" />
+
+
+            <TextView
+                android:id="@+id/streamingHost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:gravity="center"
+                android:keepScreenOn="false"
+                tools:text="http://192.168.0.1:8888"
+                android:textColor="@color/textColor"
+                android:textSize="14sp"
+                android:textStyle="italic" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
+                android:keepScreenOn="false"
+                android:drawableStart="@drawable/connected_devices_12"
+                android:drawablePadding="4dp"
+                android:text="Connected devices:"
+                android:textColor="@color/textColor"
+                android:textSize="14sp" />
+
+
+            <TextView
+                android:id="@+id/connectedDeviceCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:gravity="center"
+                android:keepScreenOn="false"
+                tools:text="11"
+                android:textColor="@color/textColor"
+                android:textSize="14sp"
+                android:textStyle="italic" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
+                android:keepScreenOn="false"
+                android:drawableStart="@drawable/ic_baseline_ondemand_video_12"
+                android:drawablePadding="4dp"
+                android:text="Streaming:"
+                android:textColor="@color/textColor"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/streamingPath"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:gravity="center"
+                android:keepScreenOn="false"
+                tools:text="sdcard/videos/1.mp4"
+                android:textColor="@color/textColor"
+                android:textSize="14sp"
+                android:textStyle="italic" />
+
+        </LinearLayout>
     </LinearLayout>
 
 
     <TextView
-        android:id="@+id/noDevicesWarn"
+        android:id="@+id/applicationStatusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:drawablePadding="4dp"
+        android:gravity="center"
+        android:keepScreenOn="false"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp"
+        android:text="Transferring device IP-address"
+        android:background="@color/backgroundColorSS"
+        android:textColor="@color/textColor"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@+id/streamingInfoLayout" />
+
+
+
+    <TextView
+        android:id="@+id/emptyDevices"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No connected devices"
-        android:elevation="4dp"
         android:drawableTop="@drawable/ic_baseline_warning_24"
-        android:textSize="14sp"
+        android:elevation="4dp"
+        android:text="No connected devices"
         android:textColor="@color/textColorSecondary"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -74,7 +187,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout"
+
+        app:layout_constraintTop_toBottomOf="@+id/applicationStatusText"
         tools:itemCount="10"
         tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/device_list_binder"
@@ -82,16 +196,45 @@
         tools:scrollbars="vertical" />
 
     <ru.liner.vr360server.views.LImageButton
+        android:id="@+id/selectVideoButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/selectVideo"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="24dp"
         android:background="@drawable/circle"
-        android:padding="16dp"
+        android:backgroundTint="@color/blue"
         android:elevation="1dp"
+        android:padding="16dp"
         android:src="@drawable/ic_baseline_video_settings_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <ru.liner.vr360server.views.LImageButton
+        android:id="@+id/playStopButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/circle"
+        android:backgroundTint="@color/green"
+        android:elevation="1dp"
+        android:padding="16dp"
+        android:src="@drawable/ic_baseline_play_arrow_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/selectVideoButton" />
+
+    <ru.liner.vr360server.views.LImageButton
+        android:id="@+id/openStreamButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/circle"
+        android:backgroundTint="@color/blue"
+        android:elevation="1dp"
+        android:padding="16dp"
+        android:src="@drawable/ic_baseline_open_in_browser_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/playStopButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,9 +76,23 @@ public class TCPServer implements Runnable {
                 return device;
         return null;
     }
+    @Nullable
+    public TCPDevice getClient(@NonNull InetAddress inetAddress) {
+        for (TCPDevice device : tcpDeviceList)
+            if (Networks.getHost(device.getInetAddress()).equals(Networks.getHost(inetAddress)))
+                return device;
+        return null;
+    }
 
     public void disconnectClient(@NonNull String hostname){
         TCPDevice device = getClient(hostname);
+        if(device != null){
+            device.stop();
+            tcpDeviceList.remove(device);
+        }
+    }
+    public void disconnectClient(@NonNull InetAddress inetAddress){
+        TCPDevice device = getClient(inetAddress);
         if(device != null){
             device.stop();
             tcpDeviceList.remove(device);
@@ -92,6 +107,24 @@ public class TCPServer implements Runnable {
         tcpDeviceList.forEach(tcpDevice -> tcpDevice.send(bytes));
     }
 
+    public void sendTo(@NonNull String hostname, @NonNull String data){
+        sendTo(hostname, data.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public void sendTo(@NonNull String hostname, byte[] bytes){
+        TCPDevice tcpDevice = getClient(hostname);
+        if(tcpDevice != null)
+            tcpDevice.send(bytes);
+    }
+
+    public void sendTo(@NonNull InetAddress inetAddress, @NonNull String data){
+        sendTo(inetAddress, data.getBytes(StandardCharsets.UTF_8));
+    }
+   public void sendTo(@NonNull InetAddress inetAddress, byte[] bytes){
+        TCPDevice tcpDevice = getClient(inetAddress);
+        if(tcpDevice != null)
+            tcpDevice.send(bytes);
+    }
 
     private void startClient(Socket socket) {
         TCPDevice tcpDevice = new TCPDevice(socket);
@@ -127,9 +160,9 @@ public class TCPServer implements Runnable {
                     itcpCallback.onReceived(inetAddress, data);
             }
         };
-        tcpDevice.setITCPCallback(callback);
-        tcpDevice.start();
         if(!tcpDeviceList.contains(tcpDevice)) {
+            tcpDevice.setITCPCallback(callback);
+            tcpDevice.start();
             tcpDeviceList.add(tcpDevice);
             if (itcpCallback != null)
                 itcpCallback.onConnected(tcpDevice);

@@ -1,20 +1,18 @@
 package ru.liner.vr360server.recycler.binder;
 
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.recyclerview.widget.RecyclerView;
-
-import java.nio.charset.StandardCharsets;
 
 import ru.liner.vr360server.R;
 import ru.liner.vr360server.activity.MainActivity;
 import ru.liner.vr360server.recycler.genericadapter.GenericAdapter;
 import ru.liner.vr360server.recycler.genericadapter.GenericBinder;
 import ru.liner.vr360server.recycler.model.Client;
+import ru.liner.vr360server.recycler.model.ClientStatus;
 import ru.liner.vr360server.tcp.TCPDevice;
 
 /**
@@ -27,10 +25,7 @@ public class DeviceBinder extends GenericBinder<Client> {
     private TextView deviceStatusText;
     private ProgressBar deviceStatusProgressBar;
     private TextView deviceProgressBarData;
-    private Button devicePlayVideo;
-    private Button devicePauseVideo;
-    private Button deviceStopVideo;
-    private Button deviceDisconnect;
+    private ImageView deviceDisconnect;
 
     @Override
     public void declareViews() {
@@ -38,42 +33,63 @@ public class DeviceBinder extends GenericBinder<Client> {
         deviceStatusText = find(R.id.deviceStatusText);
         deviceStatusProgressBar = find(R.id.deviceStatusProgressBar);
         deviceProgressBarData = find(R.id.deviceProgressBarData);
-        devicePlayVideo = find(R.id.devicePlayVideo);
-        devicePauseVideo = find(R.id.devicePauseVideo);
-        deviceStopVideo = find(R.id.deviceStopVideo);
         deviceDisconnect = find(R.id.deviceDisconnect);
     }
 
     @Override
     public void bindData(RecyclerView recyclerView, GenericAdapter.ViewHolder<Client> viewHolder, Client data) {
+        deviceStatusProgressBar.setVisibility(View.GONE);
+        deviceProgressBarData.setVisibility(View.GONE);
+        deviceStatusText.setVisibility(View.GONE);
         deviceHostName.setText(String.format("%s (%s)", data.getName(), data.getHost()));
-        devicePlayVideo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                TCPDevice device = MainActivity.tcpServer.getClient(data.getHost());
-                if (device != null) {
-                    device.send("play".getBytes(StandardCharsets.UTF_8));
-                }
-            }
-        });
-        devicePauseVideo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                TCPDevice device = MainActivity.tcpServer.getClient(data.getHost());
-                if (device != null) {
-                    device.send("pause");
-                }
-            }
-        });
-        deviceStopVideo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                TCPDevice device = MainActivity.tcpServer.getClient(data.getHost());
-                if (device != null) {
-                    device.send("stop");
-                }
-            }
-        });
+        switch (data.getStatus()) {
+            case ClientStatus.WAITING:
+                deviceStatusText.setVisibility(View.VISIBLE);
+                deviceStatusText.setText("Waiting for action");
+                break;
+            case ClientStatus.UNKNOWN:
+                deviceStatusText.setVisibility(View.VISIBLE);
+                deviceStatusText.setText("Unknown status");
+                break;
+            case ClientStatus.DOWNLOADING_VIDEO:
+                deviceStatusText.setVisibility(View.VISIBLE);
+                deviceProgressBarData.setVisibility(View.VISIBLE);
+                deviceStatusProgressBar.setVisibility(View.VISIBLE);
+                deviceStatusText.setText("Receiving video");
+                deviceStatusProgressBar.setProgress(data.getDownloadProgress());
+                break;
+            case ClientStatus.READY:
+                deviceStatusText.setVisibility(View.VISIBLE);
+                deviceStatusText.setText("Ready for play");
+                break;
+        }
+//        devicePlayVideo.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                TCPDevice device = MainActivity.tcpServer.getClient(data.getHost());
+//                if (device != null) {
+//                    device.send("play".getBytes(StandardCharsets.UTF_8));
+//                }
+//            }
+//        });
+//        devicePauseVideo.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                TCPDevice device = MainActivity.tcpServer.getClient(data.getHost());
+//                if (device != null) {
+//                    device.send("pause");
+//                }
+//            }
+//        });
+//        deviceStopVideo.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                TCPDevice device = MainActivity.tcpServer.getClient(data.getHost());
+//                if (device != null) {
+//                    device.send("stop");
+//                }
+//            }
+//        });
         deviceDisconnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

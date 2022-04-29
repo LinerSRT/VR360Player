@@ -19,6 +19,10 @@ public class Client {
     @ClientStatus
     private int status;
 
+    private int downloadProgress;
+    private int downloadedBytes;
+    private int totalBytes;
+
     public Client(@NonNull String host, @NonNull String name, @ClientStatus int status) {
         this.host = host;
         this.name = name;
@@ -42,6 +46,31 @@ public class Client {
 
     public void setStatus(@ClientStatus int status) {
         this.status = status;
+    }
+
+
+    public int getDownloadProgress() {
+        return downloadProgress;
+    }
+
+    public void setDownloadProgress(int downloadProgress) {
+        this.downloadProgress = downloadProgress;
+    }
+
+    public int getDownloadedBytes() {
+        return downloadedBytes;
+    }
+
+    public void setDownloadedBytes(int downloadedBytes) {
+        this.downloadedBytes = downloadedBytes;
+    }
+
+    public int getTotalBytes() {
+        return totalBytes;
+    }
+
+    public void setTotalBytes(int totalBytes) {
+        this.totalBytes = totalBytes;
     }
 
     @Override

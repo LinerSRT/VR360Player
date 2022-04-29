@@ -137,6 +137,11 @@ public class GenericAdapter extends RecyclerView.Adapter<GenericAdapter.ViewHold
         notifyDataSetChanged();
     }
 
+    public void set(int index, @NonNull Object item) {
+        dataList.set(index, item);
+        notifyItemChanged(index);
+    }
+
     public void set(@NonNull Collection<?> items) {
         dataList.clear();
         dataList.addAll(items);
