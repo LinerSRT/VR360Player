@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="144dp"
+    android:layout_height="256dp"
+    android:layout_margin="@dimen/contentPadding">
+
+    <com.github.florent37.shapeofview.shapes.RoundRectView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:shape_roundRect_bottomLeftRadius="@dimen/cardsCornerRadius"
+        app:shape_roundRect_bottomRightRadius="@dimen/cardsCornerRadius"
+        app:shape_roundRect_topLeftRadius="@dimen/cardsCornerRadius"
+        app:shape_roundRect_topRightRadius="@dimen/cardsCornerRadius">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/backgroundSecondaryColor"
+            android:orientation="vertical">
+            <ImageView
+                android:id="@+id/mediaPickerImageItem"
+                android:layout_width="match_parent"
+                android:scaleType="centerCrop"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
+    </com.github.florent37.shapeofview.shapes.RoundRectView>
+
+    <ImageView
+        android:id="@+id/mediaPickerImageSelection"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/circle_bg"
+        android:visibility="gone"
+        android:backgroundTint="@color/backgroundSecondaryColor"
+        android:padding="@dimen/contentPadding"
+        android:src="@drawable/done_icon" />
+
+    <ru.liner.vr360client.views.MarqueeTextView
+        android:id="@+id/mediaPickerImageFilename"
+        android:layout_width="match_parent"
+        android:gravity="center"
+        android:layout_height="wrap_content"
+        android:background="#90000000"
+        android:visibility="gone"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="@dimen/contentPadding"
+        android:maxLines="1"
+        android:textColor="@color/textColor" />
+
+</RelativeLayout>

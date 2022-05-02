@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:layout_gravity="center_horizontal"
+    android:layout_margin="8dp"
+    android:orientation="vertical">
+
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <com.github.florent37.shapeofview.shapes.RoundRectView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:elevation="4dp"
+            app:shape_roundRect_bottomLeftRadius="@dimen/cardsCornerRadius"
+            app:shape_roundRect_bottomRightRadius="@dimen/cardsCornerRadius"
+            app:shape_roundRect_topLeftRadius="@dimen/cardsCornerRadius"
+            app:shape_roundRect_topRightRadius="@dimen/cardsCornerRadius">
+
+            <ImageView
+                android:id="@+id/videoThumb"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:adjustViewBounds="true"
+                android:scaleType="centerCrop" />
+
+        </com.github.florent37.shapeofview.shapes.RoundRectView>
+
+        <ImageView
+            android:id="@+id/videoSelection"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/circle_bg"
+            android:backgroundTint="@color/backgroundSecondaryColor"
+            android:elevation="5dp"
+            android:padding="@dimen/contentPadding"
+            android:src="@drawable/done_icon"
+            android:visibility="gone" />
+
+    </RelativeLayout>
+
+    <ru.liner.vr360server.views.MarqueeTextView
+        android:id="@+id/videoName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Video Name"
+        android:textColor="@color/textColor"
+        android:textSize="@dimen/textSize"/>
+
+    <TextView
+        android:id="@+id/videoSize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="200 kb"
+        android:textColor="@color/textSecondaryColor"
+        android:textSize="@dimen/textSecondarySize" />
+
+
+</LinearLayout>

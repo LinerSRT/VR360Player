@@ -1,171 +1,204 @@
 package ru.liner.vr360server.tcp;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.annotation.SuppressLint;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
+import androidx.annotation.CallSuper;
 
 import java.io.IOException;
-import java.net.InetAddress;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-
-import ru.liner.vr360server.utils.Networks;
 
 /**
  * @author : "Line'R"
  * @mailto : serinity320@mail.com
- * @created : 28.04.2022, четверг
+ * @created : 02.05.2022, понедельник
  **/
-public class TCPServer implements Runnable {
-    private ITCPCallback itcpCallback;
+public class TCPServer {
+    private static final String TAG = TCPServer.class.getSimpleName();
+    private ServerSocket serverSocket;
+    private Callback callback;
+    private final Handler handler;
+    private List<Socket> clientSocketList;
     private final int port;
-    private boolean connected;
-    private final List<TCPDevice> tcpDeviceList = new ArrayList<>();
 
     public TCPServer(int port) {
         this.port = port;
+        this.clientSocketList = new ArrayList<>();
+        this.handler = new Handler(Looper.getMainLooper());
     }
 
-    public void setITCPCallback(ITCPCallback itcpCallback) {
-        this.itcpCallback = itcpCallback;
+    public List<Socket> getClientSocketList() {
+        return clientSocketList;
     }
 
-    public void start() {
-        connected = true;
-        new Thread(this).start();
-    }
-
-    public void stop() {
-        connected = false;
-    }
-
-    @Override
-    public void run() {
-        try {
-            ServerSocket server = new ServerSocket(port);
-            while (connected) {
+    public void sendToAll(byte[] bytes){
+        if (!(bytes == null || clientSocketList == null)) {
+            for (Socket socket : clientSocketList) {
                 try {
-                    startClient(server.accept());
-                } catch (IOException e) {
+                    socket.getOutputStream().write(bytes);
+                } catch (Exception e) {
                     e.printStackTrace();
-                    if (itcpCallback != null)
-                        itcpCallback.onConnectionFailed(server.getInetAddress());
                 }
             }
-            tcpDeviceList.forEach(TCPDevice::stop);
-            tcpDeviceList.clear();
-            server.close();
-            if (itcpCallback != null)
-                itcpCallback.onDisconnected(server.getInetAddress());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    public List<TCPDevice> getClients() {
-        return tcpDeviceList;
-    }
-
-    @Nullable
-    public TCPDevice getClient(@NonNull String hostname) {
-        for (TCPDevice device : tcpDeviceList)
-            if (Networks.getHost(device.getInetAddress()).equals(hostname))
-                return device;
-        return null;
-    }
-    @Nullable
-    public TCPDevice getClient(@NonNull InetAddress inetAddress) {
-        for (TCPDevice device : tcpDeviceList)
-            if (Networks.getHost(device.getInetAddress()).equals(Networks.getHost(inetAddress)))
-                return device;
-        return null;
-    }
-
-    public void disconnectClient(@NonNull String hostname){
-        TCPDevice device = getClient(hostname);
-        if(device != null){
-            device.stop();
-            tcpDeviceList.remove(device);
-        }
-    }
-    public void disconnectClient(@NonNull InetAddress inetAddress){
-        TCPDevice device = getClient(inetAddress);
-        if(device != null){
-            device.stop();
-            tcpDeviceList.remove(device);
         }
     }
 
     public void sendToAll(String string){
-        tcpDeviceList.forEach(tcpDevice -> tcpDevice.send(string));
+        sendToAll(string.getBytes(StandardCharsets.UTF_8));
     }
 
-    public void sendToAll(byte[] bytes){
-        tcpDeviceList.forEach(tcpDevice -> tcpDevice.send(bytes));
-    }
-
-    public void sendTo(@NonNull String hostname, @NonNull String data){
-        sendTo(hostname, data.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public void sendTo(@NonNull String hostname, byte[] bytes){
-        TCPDevice tcpDevice = getClient(hostname);
-        if(tcpDevice != null)
-            tcpDevice.send(bytes);
-    }
-
-    public void sendTo(@NonNull InetAddress inetAddress, @NonNull String data){
-        sendTo(inetAddress, data.getBytes(StandardCharsets.UTF_8));
-    }
-   public void sendTo(@NonNull InetAddress inetAddress, byte[] bytes){
-        TCPDevice tcpDevice = getClient(inetAddress);
-        if(tcpDevice != null)
-            tcpDevice.send(bytes);
-    }
-
-    private void startClient(Socket socket) {
-        TCPDevice tcpDevice = new TCPDevice(socket);
-        ITCPCallback callback = new ITCPCallback() {
-            @Override
-            public void onConnected(TCPDevice device) {
-                if (itcpCallback != null)
-                    itcpCallback.onConnected(device);
+    public void sendTo(Socket socket, byte[] bytes){
+        if (bytes != null && socket != null && socket.isConnected()) {
+            try {
+                socket.getOutputStream().write(bytes);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+        }
+    }
 
-            @Override
-            public void onDisconnected(InetAddress inetAddress) {
-                tcpDeviceList.remove(tcpDevice);
-                if (itcpCallback != null)
-                    itcpCallback.onDisconnected(inetAddress);
-            }
+    public void sendTo(Socket socket, String string){
+        sendTo(socket, string.getBytes(StandardCharsets.UTF_8));
+    }
 
-            @Override
-            public void onConnectionFailed(InetAddress inetAddress) {
-                if (itcpCallback != null)
-                    itcpCallback.onConnectionFailed(inetAddress);
-            }
+    public void start(Callback callback) {
+        this.callback = callback;
+        try {
+            this.serverSocket = new ServerSocket(port);
+            this.clientSocketList = new ArrayList<>();
+            new ServerThread().execute();
+            callback.onStarted(this);
+        } catch (Exception e) {
+            Log.e(TAG, "Unable to start server", e);
+        }
+    }
 
-            @Override
-            public void onReceived(InetAddress inetAddress, byte[] data) {
-                if (itcpCallback != null)
-                    itcpCallback.onReceived(inetAddress, data);
+    public void stop(){
+        if (clientSocketList != null) {
+            for (Socket socket : clientSocketList) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
+        }
+        if (serverSocket != null && !serverSocket.isClosed()) {
+            try {
+                serverSocket.close();
+                callback.onStopped(this);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                serverSocket = null;
+            }
+        }
+    }
 
-            @Override
-            public void onReceived(InetAddress inetAddress, String data) {
-                if (itcpCallback != null)
-                    itcpCallback.onReceived(inetAddress, data);
+    public boolean isServerOn() {
+        return serverSocket != null && !serverSocket.isClosed();
+    }
+
+
+    public class SocketThread implements Runnable {
+        private final Socket socket;
+
+        public SocketThread(Socket socket) {
+            this.socket = socket;
+        }
+
+        @Override
+        public void run() {
+            try {
+                InputStream inputStream = socket.getInputStream();
+                if (isServerOn()) {
+                    while (true) {
+                        byte[] byteBuffer = new byte[2048];
+                        int size = inputStream.read(byteBuffer);
+                        if (size <= 0)
+                            break;
+                        handler.post(() -> {
+                            callback.onReceived(socket, Arrays.copyOfRange(byteBuffer, 0, size));
+                            callback.onReceived(socket, new String(Arrays.copyOfRange(byteBuffer, 0, size)));
+                        });
+                    }
+                }
+                if (clientSocketList != null) {
+                    clientSocketList.remove(socket);
+                    handler.post(() -> callback.onDisconnected(socket));
+                }
+            } catch (Exception e) {
+                if (clientSocketList != null) {
+                    clientSocketList.remove(socket);
+                    handler.post(() -> callback.onDisconnected(socket));
+                }
+                e.printStackTrace();
             }
-        };
-        if(!tcpDeviceList.contains(tcpDevice)) {
-            tcpDevice.setITCPCallback(callback);
-            tcpDevice.start();
-            tcpDeviceList.add(tcpDevice);
-            if (itcpCallback != null)
-                itcpCallback.onConnected(tcpDevice);
+        }
+    }
+
+
+    @SuppressLint("StaticFieldLeak")
+    private class ServerThread extends AsyncTask<Void, byte[], Void> {
+        @Override
+        protected void onPreExecute() {
+            clientSocketList = new ArrayList<>();
+        }
+
+        @Override
+        public Void doInBackground(Void... params) {
+            while (isServerOn()) {
+                try {
+                    Socket socket = serverSocket.accept();
+                    clientSocketList.add(socket);
+                    handler.post(() -> callback.onConnected(socket));
+                    new Thread(new SocketThread(socket)).start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
+    }
+
+
+    public interface Callback {
+        @CallSuper
+        default void onStarted(TCPServer socket) {
+            Log.d(TAG, "onStarted: " + socket.toString());
+        }
+
+        @CallSuper
+        default void onConnected(Socket socket) {
+            Log.d(TAG, "onConnected: " + socket.toString());
+        }
+
+        @CallSuper
+        default void onReceived(Socket socket, byte[] bytes) {
+        }
+
+        @CallSuper
+        default void onReceived(Socket socket, String string) {
+            Log.d(TAG, "onReceived: " + string);
+        }
+
+        @CallSuper
+        default void onDisconnected(Socket socket) {
+            Log.d(TAG, "onDisconnected: " + socket.toString());
+        }
+
+        @CallSuper
+        default void onStopped(TCPServer socket) {
+            Log.d(TAG, "onStopped: " + socket.toString());
         }
     }
 }

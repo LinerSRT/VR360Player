@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:animateLayoutChanges="true"
     android:layout_height="match_parent"
+    android:background="@color/backgroundColor"
     android:orientation="vertical">
 
 
@@ -12,7 +13,7 @@
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="70dp"
-        android:background="@color/accentColor"
+        android:background="@color/primaryColor"
         android:elevation="8dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -38,7 +39,7 @@
         android:visibility="gone"
         tools:visibility="visible"
         android:layout_width="match_parent"
-        android:background="@color/accentColorSecondary"
+        android:background="@color/primarySecondaryColor"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="8dp"
@@ -54,11 +55,11 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:layout_marginEnd="8dp"
-                android:gravity="center"
                 android:drawableStart="@drawable/ic_baseline_info_24"
                 android:drawablePadding="4dp"
+                android:gravity="center"
                 android:keepScreenOn="false"
-                android:text="Streaming started at:"
+                android:text="Streaming at:"
                 android:textColor="@color/textColor"
                 android:textSize="14sp" />
 
@@ -157,7 +158,7 @@
         android:paddingTop="2dp"
         android:paddingBottom="2dp"
         android:text="Transferring device IP-address"
-        android:background="@color/backgroundColorSS"
+        android:background="@color/backgroundSecondaryColor"
         android:textColor="@color/textColor"
         android:textSize="14sp"
         app:layout_constraintTop_toBottomOf="@+id/streamingInfoLayout" />
@@ -171,7 +172,7 @@
         android:drawableTop="@drawable/ic_baseline_warning_24"
         android:elevation="4dp"
         android:text="No connected devices"
-        android:textColor="@color/textColorSecondary"
+        android:textColor="@color/textColor"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -195,46 +196,46 @@
         tools:orientation="vertical"
         tools:scrollbars="vertical" />
 
-    <ru.liner.vr360server.views.LImageButton
-        android:id="@+id/selectVideoButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="24dp"
-        android:background="@drawable/circle"
-        android:backgroundTint="@color/blue"
-        android:elevation="1dp"
-        android:padding="16dp"
-        android:src="@drawable/ic_baseline_video_settings_24"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
-    <ru.liner.vr360server.views.LImageButton
-        android:id="@+id/playStopButton"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="24dp"
-        android:background="@drawable/circle"
-        android:backgroundTint="@color/green"
+        android:layout_marginBottom="16dp"
         android:elevation="1dp"
-        android:padding="16dp"
-        android:src="@drawable/ic_baseline_play_arrow_24"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/selectVideoButton" />
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-    <ru.liner.vr360server.views.LImageButton
-        android:id="@+id/openStreamButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="24dp"
-        android:background="@drawable/circle"
-        android:backgroundTint="@color/blue"
-        android:elevation="1dp"
-        android:padding="16dp"
-        android:src="@drawable/ic_baseline_open_in_browser_24"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/playStopButton" />
+        <ru.liner.vr360server.views.LImageButton
+            android:id="@+id/selectVideoButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/circle"
+            android:elevation="1dp"
+            android:padding="16dp"
+            android:src="@drawable/ic_baseline_video_settings_24" />
 
+        <ru.liner.vr360server.views.LImageButton
+            android:id="@+id/playStopButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/circle"
+            android:backgroundTint="@color/green"
+            android:elevation="1dp"
+            android:padding="16dp"
+            android:src="@drawable/ic_baseline_play_arrow_24" />
+
+        <ru.liner.vr360server.views.LImageButton
+            android:id="@+id/startIPPublisher"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/circle"
+            android:backgroundTint="@color/green"
+            android:elevation="1dp"
+            android:padding="16dp"
+            android:src="@drawable/ic_baseline_cell_tower_24" />
+
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

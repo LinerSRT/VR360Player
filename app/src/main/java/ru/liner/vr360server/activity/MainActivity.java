@@ -1,24 +1,20 @@
 package ru.liner.vr360server.activity;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.content.res.ColorStateList;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.IOException;
-import java.net.InetAddress;
+import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -26,24 +22,23 @@ import ru.liner.vr360server.CoreActivity;
 import ru.liner.vr360server.R;
 import ru.liner.vr360server.recycler.binder.DeviceBinder;
 import ru.liner.vr360server.recycler.genericadapter.GenericAdapter;
-import ru.liner.vr360server.recycler.model.Client;
-import ru.liner.vr360server.recycler.model.ClientStatus;
+import ru.liner.vr360server.recycler.model.ConnectedDevice;
 import ru.liner.vr360server.server.IPPublisher;
 import ru.liner.vr360server.server.MediaStreamingServer;
-import ru.liner.vr360server.tcp.ITCPCallback;
-import ru.liner.vr360server.tcp.TCPDevice;
 import ru.liner.vr360server.tcp.TCPServer;
 import ru.liner.vr360server.utils.Comparator;
 import ru.liner.vr360server.utils.Constant;
-import ru.liner.vr360server.utils.Files;
 import ru.liner.vr360server.utils.Lists;
 import ru.liner.vr360server.utils.Networks;
+import ru.liner.vr360server.utils.VideoFile;
+import ru.liner.vr360server.views.BaseDialog;
+import ru.liner.vr360server.views.BaseDialogBuilder;
 import ru.liner.vr360server.views.LImageButton;
 
 
 @SuppressWarnings("FieldCanBeLocal")
 @SuppressLint("WrongConstant")
-public class MainActivity extends CoreActivity implements ITCPCallback {
+public class MainActivity extends CoreActivity implements TCPServer.Callback {
     public static TCPServer tcpServer;
     private IPPublisher ipPublisher;
     private MediaStreamingServer mediaStreamingServer;
@@ -56,19 +51,13 @@ public class MainActivity extends CoreActivity implements ITCPCallback {
     private TextView connectedDeviceCount;
     private TextView streamingPath;
     private TextView applicationStatusText;
-    private LImageButton openStreamButton;
     private LImageButton playStopButton;
     private LImageButton selectVideoButton;
+    private LImageButton startIPPublisher;
 
 
-    private String selectedVideoPath;
-    private boolean streamingStarted;
+    private VideoFile videoFile;
 
-    private void createSockets() {
-        tcpServer = new TCPServer(Constant.SERVER_TCP_CONNECTION_PORT);
-        tcpServer.setITCPCallback(this);
-        ipPublisher = new IPPublisher();
-    }
 
     private void findViews() {
         deviceRecycler = findViewById(R.id.deviceRecycler);
@@ -78,9 +67,9 @@ public class MainActivity extends CoreActivity implements ITCPCallback {
         connectedDeviceCount = findViewById(R.id.connectedDeviceCount);
         streamingPath = findViewById(R.id.streamingPath);
         applicationStatusText = findViewById(R.id.applicationStatusText);
-        openStreamButton = findViewById(R.id.openStreamButton);
         playStopButton = findViewById(R.id.playStopButton);
         selectVideoButton = findViewById(R.id.selectVideoButton);
+        startIPPublisher = findViewById(R.id.startIPPublisher);
     }
 
     private void setApplicationStatus(@NonNull String text) {
@@ -98,6 +87,10 @@ public class MainActivity extends CoreActivity implements ITCPCallback {
         }, timeout);
     }
 
+
+    private boolean networkingStarted;
+    private boolean streamingStarted;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,55 +98,100 @@ public class MainActivity extends CoreActivity implements ITCPCallback {
         StrictMode.setThreadPolicy(policy);
         setContentView(R.layout.activity_main);
         findViews();
-        createSockets();
-        ipPublisher.start();
-        tcpServer.start();
-        setApplicationStatus("Starting networking", 1500);
+        ipPublisher = new IPPublisher();
+        tcpServer = new TCPServer(Constant.SERVER_TCP_CONNECTION_PORT);
         deviceRecycler.setLayoutManager(new LinearLayoutManager(this));
         adapter = new GenericAdapter(deviceRecycler);
-        adapter.register(R.layout.device_list_binder, DeviceBinder.class, Client.class);
+        adapter.register(R.layout.device_list_binder, DeviceBinder.class, ConnectedDevice.class);
         deviceRecycler.setAdapter(adapter);
+        selectVideoButton.setEnabled(false);
+        playStopButton.setEnabled(false);
+
+
+        startIPPublisher.setClickCallback(button -> {
+            startIPPublisher.setEnabled(false);
+            if (!networkingStarted) {
+                networkingStarted = true;
+                if (ipPublisher == null)
+                    ipPublisher = new IPPublisher();
+                ipPublisher.start();
+                tcpServer.start(this);
+                selectVideoButton.setEnabled(true);
+                playStopButton.setEnabled(false);
+                setApplicationStatus("Waiting for clients");
+            } else {
+                networkingStarted = false;
+                ipPublisher.interrupt();
+                ipPublisher = null;
+                tcpServer.stop();
+                adapter.clear();
+                selectVideoButton.setEnabled(false);
+                playStopButton.setEnabled(false);
+                streamingInfoLayout.setVisibility(View.GONE);
+                setApplicationStatus("Connections disabled");
+            }
+            startIPPublisher.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, networkingStarted ? R.color.red : R.color.green)));
+        });
+
+
         selectVideoButton.setClickCallback(button -> {
-            if(streamingStarted){
-                tcpServer.sendToAll("force_stop");
+            if (!streamingStarted) {
+               BaseDialog baseDialog =  new BaseDialogBuilder(MainActivity.this)
+                        .setDialogTitle("Choose video")
+                        .setDialogText("Select video for stream")
+                        .setDialogType(BaseDialogBuilder.Type.VIDEO_CHOOSE)
+                        .setVideoPickListener(new BaseDialog.BaseDialogVideoPickListener() {
+                            @Override
+                            public void onVideoSelected(VideoFile videoModel) {
+                                MainActivity.this.videoFile = videoModel;
+                                stopMediaServer();
+                                startMediaServer();
+                                if (!tcpServer.getClientSocketList().isEmpty()) {
+                                    selectVideoButton.setEnabled(false);
+                                    playStopButton.setEnabled(false);
+                                    tcpServer.sendToAll("prepare_stream@http://" + Networks.getLocalIpAddress() + ":" + Constant.SERVER_STREAM_VIDEO_PORT + "@" + videoModel.getDisplayName());
+                                    setApplicationStatus("Synchronizing stream with clients");
+                                }
+                                streamingInfoLayout.setVisibility(View.VISIBLE);
+                                streamingHost.setText(String.format("http://%s:%s", Networks.getLocalIpAddress(), Constant.SERVER_STREAM_VIDEO_PORT));
+                                connectedDeviceCount.setText(String.valueOf(tcpServer.getClientSocketList().size()));
+                                streamingPath.setText(videoModel.getDisplayName());
+                            }
+                        }).build();
+               baseDialog.showDialog();
+
+            } else {
+                if (tcpServer != null)
+                    tcpServer.sendToAll("stop_stream");
                 stopMediaServer();
                 streamingStarted = false;
-                playStopButton.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_baseline_play_arrow_24));
-                playStopButton.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, R.color.green)));
-                setApplicationStatus("Ready to stream");
+                setApplicationStatus("Ready for start streaming");
             }
-            Intent intent = new Intent();
-            intent.setType("video/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Choose video to stream"), Constant.CHOOSE_VIDEO_REQUEST_CORE);
+            playStopButton.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, streamingStarted ? R.drawable.ic_baseline_stop_24 : R.drawable.ic_baseline_play_arrow_24));
+            playStopButton.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, streamingStarted ? R.color.red : R.color.green)));
         });
+
+
         playStopButton.setClickCallback(button -> {
-            if (TextUtils.isEmpty(selectedVideoPath)) {
+            if (videoFile == null) {
                 setApplicationStatus("No selected video, aborting", 1000);
             } else {
                 if (!streamingStarted) {
                     playStopButton.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_baseline_stop_24));
                     playStopButton.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, R.color.red)));
                     setApplicationStatus("Streaming video");
-                    tcpServer.sendToAll("start_video");
+                    if (tcpServer != null)
+                        tcpServer.sendToAll("play_stream");
                     streamingStarted = true;
                 } else {
-                    tcpServer.sendToAll("force_stop");
-                    stopMediaServer();
+                    if (tcpServer != null)
+                        tcpServer.sendToAll("pause_stream");
+                    //stopMediaServer();
                     streamingStarted = false;
                     playStopButton.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_baseline_play_arrow_24));
                     playStopButton.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, R.color.green)));
                     setApplicationStatus("Ready to stream");
                 }
-            }
-        });
-        openStreamButton.setClickCallback(button -> {
-            if (streamingStarted) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(streamingHost.getText().toString())));
-            } else if (!TextUtils.isEmpty(selectedVideoPath)) {
-                setApplicationStatus("No streaming video, aborting", 2000);
-            } else {
-                setApplicationStatus("Select video to open stream", 2000);
             }
         });
     }
@@ -166,7 +204,7 @@ public class MainActivity extends CoreActivity implements ITCPCallback {
     }
 
     private void startMediaServer() {
-        mediaStreamingServer = new MediaStreamingServer(selectedVideoPath, Constant.SERVER_STREAM_VIDEO_PORT);
+        mediaStreamingServer = new MediaStreamingServer(videoFile.getFullPath(), Constant.SERVER_STREAM_VIDEO_PORT);
         try {
             mediaStreamingServer.start();
         } catch (IOException e) {
@@ -174,137 +212,110 @@ public class MainActivity extends CoreActivity implements ITCPCallback {
         }
     }
 
+
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == Constant.CHOOSE_VIDEO_REQUEST_CORE) {
-            if (resultCode == RESULT_OK) {
-                if (data != null) {
-                    selectedVideoPath = Files.getRealPathFromURI(this, data.getData());
-                    stopMediaServer();
-                    startMediaServer();
-                    tcpServer.sendToAll("start_download");
-                    setApplicationStatus("Video selected, ready to play");
-                    streamingInfoLayout.setVisibility(View.VISIBLE);
-                    streamingHost.setText(String.format("http://%s:%s", Networks.getLocalIpAddress(), Constant.SERVER_STREAM_VIDEO_PORT));
-                    connectedDeviceCount.setText(String.valueOf(adapter.getItemCount()));
-                    streamingPath.setText(selectedVideoPath);
-                }
-            } else {
-                setApplicationStatus("Failed video selecting, try again", 1000);
-            }
-        }
+    public void onStarted(TCPServer tcpServer) {
+        TCPServer.Callback.super.onStarted(tcpServer);
+        startIPPublisher.setEnabled(true);
     }
 
-
     @Override
-    public void onConnected(TCPDevice device) {
-        Client client = new Client(Networks.getHost(device.getInetAddress()), device.getInetAddress().getCanonicalHostName(), ClientStatus.WAITING);
-        if (!Lists.contains(adapter.getItemsList(), new Comparator<Client, Client>(client) {
+    public void onConnected(Socket socket) {
+        TCPServer.Callback.super.onConnected(socket);
+        ConnectedDevice connectedDevice = new ConnectedDevice(socket);
+        if (!Lists.contains(adapter.getItemsList(), new Comparator<ConnectedDevice, ConnectedDevice>(connectedDevice) {
             @Override
-            public boolean compare(Client one, Client other) {
-                return one.getHost().equals(other.getHost()) || one.getName().equals(other.getName());
+            public boolean compare(ConnectedDevice one, ConnectedDevice other) {
+                return one.getSocket().equals(other.getSocket());
             }
         })) {
             runOnUiThread(() -> {
-                adapter.add(client);
+                adapter.add(connectedDevice);
                 emptyDevices.setVisibility(adapter.getItemCount() != 0 ? View.GONE : View.VISIBLE);
                 connectedDeviceCount.setText(String.valueOf(adapter.getItemCount()));
             });
-            setApplicationStatus("New device connected " + Networks.getHost(device.getInetAddress()), 500);
+            setApplicationStatus("New device connected " + Networks.getHost(socket.getInetAddress()), 500);
         }
     }
 
+
     @Override
-    public void onDisconnected(InetAddress inetAddress) {
-        Client client = new Client(Networks.getHost(inetAddress), inetAddress.getCanonicalHostName(), ClientStatus.WAITING);
-        int index = Lists.indexOf(adapter.getItemsList(), new Comparator<Client, Client>(client) {
+    public void onDisconnected(Socket socket) {
+        TCPServer.Callback.super.onDisconnected(socket);
+        if (socket == null)
+            return;
+
+        ConnectedDevice connectedDevice = new ConnectedDevice(socket);
+        int index = Lists.indexOf(adapter.getItemsList(), new Comparator<ConnectedDevice, ConnectedDevice>(connectedDevice) {
             @Override
-            public boolean compare(Client one, Client other) {
-                return one.getHost().equals(other.getHost()) || one.getName().equals(other.getName());
+            public boolean compare(ConnectedDevice one, ConnectedDevice other) {
+                return one.getSocket().equals(other.getSocket());
             }
         });
         if (index != -1) {
             runOnUiThread(() -> {
-                adapter.remove(index);
-                emptyDevices.setVisibility(adapter.getItemCount() != 0 ? View.GONE : View.VISIBLE);
-                connectedDeviceCount.setText(String.valueOf(adapter.getItemCount()));
+                if (index < adapter.getItemCount()) {
+                    adapter.remove(index);
+                    emptyDevices.setVisibility(adapter.getItemCount() != 0 ? View.GONE : View.VISIBLE);
+                    connectedDeviceCount.setText(String.valueOf(adapter.getItemCount()));
+                }
             });
-            setApplicationStatus("Device disconnected " + Networks.getHost(inetAddress), 500);
+            setApplicationStatus("Device disconnected " + Networks.getHost(socket.getInetAddress()), 500);
         }
     }
 
     @Override
-    public void onConnectionFailed(InetAddress inetAddress) {
-        setApplicationStatus("Failed to connect with " + Networks.getHost(inetAddress), 500);
+    public void onStopped(TCPServer tcpServer) {
+        TCPServer.Callback.super.onStopped(tcpServer);
+        startIPPublisher.setEnabled(true);
     }
 
-    @Override
-    public void onReceived(InetAddress inetAddress, byte[] data) {
-
-    }
 
     @Override
-    public void onReceived(InetAddress inetAddress, String data) {
-        if (data.equals("disconnect")) {
-            tcpServer.disconnectClient(Networks.getHost(inetAddress));
-        } else if (data.contains("download_update")) {
-            Client client = new Client(Networks.getHost(inetAddress), inetAddress.getCanonicalHostName(), ClientStatus.WAITING);
-            int index = Lists.indexOf(adapter.getItemsList(), new Comparator<Client, Client>(client) {
-                @Override
-                public boolean compare(Client one, Client other) {
-                    return one.getHost().equals(other.getHost()) || one.getName().equals(other.getName());
-                }
-            });
-            if (index != -1) {
-                client = adapter.get(index);
-                String[] dataSplit = data.split("@");
-                if (dataSplit.length >= 4) {
-                    if(TextUtils.isDigitsOnly(dataSplit[1])){
-                        client.setDownloadProgress(Integer.parseInt(dataSplit[1]));
-                    } else {
-                        return;
-                    }
-                    if(TextUtils.isDigitsOnly(dataSplit[2])){
-                        client.setDownloadedBytes(Integer.parseInt(dataSplit[2]));
-                    } else {
-                        return;
-                    }
-                    if(TextUtils.isDigitsOnly(dataSplit[3])){
-                        client.setTotalBytes(Integer.parseInt(dataSplit[3]));
-                    } else {
-                        return;
-                    }
-                    client.setStatus(client.getDownloadProgress() >= 100 ? ClientStatus.READY : ClientStatus.DOWNLOADING_VIDEO);
-                    Client finalClient = client;
-                    runOnUiThread(() -> adapter.set(index, finalClient));
-                }
+    public void onReceived(Socket device, String data) {
+        TCPServer.Callback.super.onReceived(device, data);
+        ConnectedDevice ret = new ConnectedDevice(device);
+        int index = Lists.indexOf(adapter.getItemsList(), new Comparator<ConnectedDevice, ConnectedDevice>(ret) {
+            @Override
+            public boolean compare(ConnectedDevice one, ConnectedDevice other) {
+                return one.getSocket().equals(other.getSocket());
             }
-        } else if (data.equals("download_finished")) {
-            Client client = new Client(Networks.getHost(inetAddress), inetAddress.getCanonicalHostName(), ClientStatus.WAITING);
-            int index = Lists.indexOf(adapter.getItemsList(), new Comparator<Client, Client>(client) {
-                @Override
-                public boolean compare(Client one, Client other) {
-                    return one.getHost().equals(other.getHost()) || one.getName().equals(other.getName());
-                }
-            });
-            if (index != -1) {
-                client = adapter.get(index);
-                client.setStatus(ClientStatus.READY);
-                Client finalClient = client;
-                runOnUiThread(() -> {
-                    adapter.set(index, finalClient);
-                    playStopButton.setEnabled(allClientsReceivedVideo());
+        });
+        if (index != -1) {
+            ConnectedDevice client = adapter.get(index);
+            if (data.contains("preparing_started")) {
+                client.setFetchingStream(true);
+                playStopButton.setEnabled(false);
+                selectVideoButton.setEnabled(false);
+            } else if (data.contains("preparing_progress")) {
+                int progress = Integer.parseInt(data.split("@")[1]);
+                int downloadedBytes = Integer.parseInt(data.split("@")[2]);
+                int totalBytes = Integer.parseInt(data.split("@")[2]);
+                client.setFetchingStream(true);
+                client.setFetchProgress(progress);
+                client.setFetchDownloaded(downloadedBytes);
+                client.setFetchTotal(totalBytes);
+            } else if (data.contains("preparing_finished")) {
+                client.setReadyToPlay(true);
+                client.setFetchingStream(false);
+            }
+            adapter.set(index, client);
+            if (allClientsReceivedVideo()) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        selectVideoButton.setEnabled(true);
+                        playStopButton.setEnabled(true);
+                    }
                 });
-                tcpServer.sendTo(inetAddress, "download_accepted");
             }
         }
     }
 
     private boolean allClientsReceivedVideo() {
         for (int i = 0; i < adapter.getItemCount(); i++) {
-            Client client = adapter.get(i);
-            if (client.getStatus() != ClientStatus.READY)
+            ConnectedDevice client = adapter.get(i);
+            if (!client.isReadyToPlay())
                 return false;
         }
         return true;

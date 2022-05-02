@@ -10,7 +10,7 @@ import java.io.File;
  * @created : 22.04.2022, пятница
  **/
 public class Constant {
-    public static final int CHOOSE_VIDEO_REQUEST_CORE = 2283;
+    public static final int PERMISSION_REQUEST_CORE = 2283;
     public static final int SERVER_STREAM_VIDEO_PORT = 8888;
     public static final int SERVER_TCP_CONNECTION_PORT = 9092;
     public static final int SERVER_MULTICAST_PORT = 1234;

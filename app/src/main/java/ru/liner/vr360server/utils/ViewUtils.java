@@ -1,6 +1,7 @@
 package ru.liner.vr360server.utils;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -114,5 +115,27 @@ public class ViewUtils {
         Window window = activity.getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         window.setNavigationBarColor(color);
+    }
+
+
+    public static int getStatusBarSize(@NonNull Context context) {
+        final Resources resources = context.getResources();
+        final int resourceId = resources.getIdentifier(
+                "status_bar_height",
+                "dimen",
+                "android"
+        );
+        return resources.getDimensionPixelSize(resourceId);
+    }
+
+
+    public static int getNavigationBarSize(@NonNull Context context) {
+        final Resources resources = context.getResources();
+        final int resourceId = resources.getIdentifier(
+                "navigation_bar_height",
+                "dimen",
+                "android"
+        );
+        return resources.getDimensionPixelSize(resourceId);
     }
 }

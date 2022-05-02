@@ -5,6 +5,7 @@ import android.content.res.ColorStateList;
 import android.util.AttributeSet;
 import android.view.animation.AccelerateInterpolator;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageButton;
@@ -19,6 +20,8 @@ import ru.liner.vr360server.R;
  **/
 public class LImageButton extends AppCompatImageButton {
     private Callback callback;
+    @ColorInt
+    private int previousBackgroundColor;
 
     public LImageButton(@NonNull Context context) {
         this(context, null);
@@ -60,7 +63,11 @@ public class LImageButton extends AppCompatImageButton {
     @Override
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
-        setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(getContext(), enabled ? R.color.accentColor : R.color.accentColorDisabled)));
+        if (!enabled) {
+            setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(getContext(), R.color.textDisabledColor)));
+        } else {
+            setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(getContext(), R.color.primaryColor)));
+        }
     }
 
     public interface Callback {

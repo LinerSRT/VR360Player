@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/contentPadding"
+    android:layout_marginEnd="@dimen/contentPadding"
+    android:layout_marginTop="@dimen/contentPadding"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/mediaPickerFileItem"
+        android:layout_width="40dp"
+        android:layout_height="40dp" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <com.liner.videowallpaper.views.YSTextView
+            android:id="@+id/mediaPickerFileName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lines="1"
+            android:singleLine="true"
+            android:text="Filenaasdasdasdasdasddasdasdasdasdasdasdasdasdasdme"
+            android:maxLines="50"
+            android:textColor="@color/textColor"
+            android:textSize="@dimen/textSize"
+            android:textStyle="bold"
+            app:ys_type="Medium" />
+
+        <com.liner.videowallpaper.views.YSTextView
+            android:id="@+id/mediaPickerFileInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lines="1"
+            android:singleLine="true"
+            android:textColor="@color/textSecondaryColor"
+            android:textSize="@dimen/textSecondarySize"
+            app:ys_type="Light"
+            tools:text="/0/emulated/DCIM/Camera" />
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/mediaPickerFileSelection"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:padding="@dimen/contentPadding"
+        android:src="@drawable/done_icon" />
+
+
+</LinearLayout>

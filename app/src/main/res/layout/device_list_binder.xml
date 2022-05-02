@@ -3,56 +3,59 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:background="@drawable/background_round"
-    android:backgroundTint="@color/backgroundColorSS"
-    android:padding="16dp"
+    android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    android:layout_height="wrap_content">
+    android:background="@drawable/background_round"
+    android:backgroundTint="@color/backgroundSecondaryColor">
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/circle"
-        android:backgroundTint="#1565C0"
-        android:src="@drawable/ic_baseline_devices_other_24"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:text="Device"
-        android:textColor="@color/textColor"
-        android:textSize="12sp"
-        app:layout_constraintStart_toEndOf="@+id/imageView"
-        app:layout_constraintTop_toTopOf="@+id/imageView" />
+        android:layout_marginTop="8dp"
+        android:src="@drawable/ic_baseline_wifi_tethering_24"
+        app:layout_constraintStart_toEndOf="@+id/view"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/deviceHostName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="4dp"
         android:text="Asus (192.168.0.1:8080)"
-        android:textColor="@color/textColorSecondary"
+        android:textColor="@color/textColor"
         android:textSize="14sp"
         android:textStyle="italic|bold"
         app:layout_constraintBottom_toBottomOf="@+id/imageView"
-        app:layout_constraintStart_toEndOf="@+id/imageView" />
+        app:layout_constraintStart_toEndOf="@+id/imageView"
+        app:layout_constraintTop_toTopOf="@+id/imageView" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="52ms"
+        android:textColor="@color/primaryColor"
+        android:textSize="10sp"
+        android:textStyle="italic"
+        app:layout_constraintBottom_toBottomOf="@+id/imageView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/imageView" />
 
 
     <TextView
         android:id="@+id/deviceStatusText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         android:text="Transferring video"
-        android:textColor="@color/textColorSecondary"
+        android:textColor="@color/textSecondaryColor"
         android:textSize="12sp"
-        app:layout_constraintStart_toStartOf="@+id/imageView"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        app:layout_constraintBottom_toBottomOf="@+id/deviceHostName"
+        app:layout_constraintEnd_toStartOf="@+id/textView"
+        app:layout_constraintTop_toTopOf="@+id/deviceHostName" />
 
     <ProgressBar
         android:id="@+id/deviceStatusProgressBar"
@@ -61,33 +64,119 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:progress="0"
+        android:progress="50"
         android:progressBackgroundTint="@color/backgroundColor"
         android:progressTint="#1565C0"
-        app:layout_constraintBottom_toBottomOf="@+id/deviceStatusText"
         app:layout_constraintEnd_toStartOf="@+id/deviceProgressBarData"
-        app:layout_constraintStart_toEndOf="@+id/deviceStatusText"
-        app:layout_constraintTop_toTopOf="@+id/deviceStatusText" />
+        app:layout_constraintStart_toEndOf="@+id/view"
+        app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
 
     <TextView
         android:id="@+id/deviceProgressBarData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:text="123/1234 kb"
-        android:textColor="@color/textColorSecondary"
+        android:layout_marginEnd="8dp"
+        android:textColor="@color/textSecondaryColor"
         android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/deviceStatusProgressBar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/deviceStatusText" />
+        app:layout_constraintTop_toTopOf="@+id/deviceStatusProgressBar"
+        tools:text="123/1234 kb" />
 
-    <ImageView
-        android:id="@+id/deviceDisconnect"
+
+    <TextView
+        android:id="@+id/deviceProgressBarData2"
         android:layout_width="wrap_content"
-        android:layout_height="32dp"
-        android:src="@drawable/ic_baseline_close_24"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:textColor="@color/textSecondaryColor"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="@+id/seekBar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/deviceStatusProgressBar"
-        app:layout_constraintTop_toTopOf="@+id/textView" />
+        app:layout_constraintTop_toTopOf="@+id/seekBar"
+        tools:text="22:39/23:33" />
 
+    <Button
+        android:id="@+id/button"
+        style="@style/AppTheme.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="@color/red"
+        android:text="Disconnect"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/view"
+        app:layout_constraintTop_toBottomOf="@+id/LImageButton" />
+
+
+    <Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:checked="true"
+        android:text="Allow play"
+        android:textColor="@color/textSecondaryColor"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="@+id/button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/LImageButton" />
+
+    <View
+        android:id="@+id/view"
+        android:layout_width="8dp"
+        android:layout_height="0dp"
+        android:background="@drawable/background_round_left"
+        android:backgroundTint="@color/green"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <ru.liner.vr360server.views.LImageButton
+        android:id="@+id/LImageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/circle"
+        android:backgroundTint="@color/backgroundColor"
+        android:src="@drawable/ic_baseline_play_arrow_24"
+        app:layout_constraintStart_toEndOf="@+id/view"
+        app:layout_constraintTop_toBottomOf="@+id/deviceHostName" />
+
+    <ru.liner.vr360server.views.LImageButton
+        android:id="@+id/LImageButton2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/circle"
+        android:backgroundTint="@color/backgroundColor"
+        android:src="@drawable/ic_baseline_volume_down_24"
+        app:layout_constraintStart_toEndOf="@+id/LImageButton"
+        app:layout_constraintTop_toTopOf="@+id/LImageButton" />
+
+    <ru.liner.vr360server.views.LImageButton
+        android:id="@+id/LImageButton3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/circle"
+        android:backgroundTint="@color/backgroundColor"
+        android:src="@drawable/ic_baseline_volume_up_24"
+        app:layout_constraintStart_toEndOf="@+id/LImageButton2"
+        app:layout_constraintTop_toTopOf="@+id/LImageButton" />
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:progress="50"
+        app:layout_constraintBottom_toBottomOf="@+id/LImageButton"
+        app:layout_constraintEnd_toStartOf="@+id/deviceProgressBarData2"
+        app:layout_constraintStart_toEndOf="@+id/LImageButton3"
+        app:layout_constraintTop_toTopOf="@+id/LImageButton" />
 </androidx.constraintlayout.widget.ConstraintLayout>
