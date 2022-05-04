@@ -16,6 +16,7 @@ import android.webkit.MimeTypeMap;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -162,15 +163,15 @@ public class FileUtils {
             while (cursor.moveToNext()) {
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inSampleSize = 1;
-                VideoFile videoFile = new VideoFile(
-                        cursor.getPosition(),
-                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)),
-                        cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)),
-                        Uri.withAppendedPath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, String.valueOf(cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID)))),
-                        MediaStore.Video.Thumbnails.getThumbnail(context.getContentResolver(), cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID)), MediaStore.Video.Thumbnails.MINI_KIND, options)
-                );
-                list.add(videoFile);
+                    VideoFile videoFile = new VideoFile(
+                            cursor.getPosition(),
+                            cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)),
+                            cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)),
+                            cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)),
+                            Uri.withAppendedPath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, String.valueOf(cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID)))),
+                            MediaStore.Video.Thumbnails.getThumbnail(context.getContentResolver(), cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID)), MediaStore.Video.Thumbnails.MINI_KIND, options)
+                    );
+                    list.add(videoFile);
             }
             cursor.close();
         }

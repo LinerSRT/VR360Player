@@ -30,6 +30,22 @@
             android:text="@string/app_name"
             android:textColor="@color/textColor"
             android:textSize="22sp" />
+        <TextView
+            android:id="@+id/applicationStatusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:drawablePadding="4dp"
+            android:gravity="center"
+            android:keepScreenOn="false"
+            android:layout_marginStart="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:text=""
+            android:background="@drawable/background_round"
+            android:textColor="@color/textColor"
+            android:textSize="14sp"
+            app:layout_constraintTop_toBottomOf="@+id/streamingInfoLayout" />
 
 
     </LinearLayout>
@@ -131,7 +147,7 @@
                 android:textColor="@color/textColor"
                 android:textSize="14sp" />
 
-            <TextView
+            <ru.liner.vr360server.views.MarqueeTextView
                 android:id="@+id/streamingPath"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -147,21 +163,6 @@
     </LinearLayout>
 
 
-    <TextView
-        android:id="@+id/applicationStatusText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:drawablePadding="4dp"
-        android:gravity="center"
-        android:keepScreenOn="false"
-        android:paddingTop="2dp"
-        android:paddingBottom="2dp"
-        android:text="Transferring device IP-address"
-        android:background="@color/backgroundSecondaryColor"
-        android:textColor="@color/textColor"
-        android:textSize="14sp"
-        app:layout_constraintTop_toBottomOf="@+id/streamingInfoLayout" />
 
 
 
@@ -189,7 +190,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
 
-        app:layout_constraintTop_toBottomOf="@+id/applicationStatusText"
+        app:layout_constraintTop_toBottomOf="@+id/streamingInfoLayout"
         tools:itemCount="10"
         tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/device_list_binder"

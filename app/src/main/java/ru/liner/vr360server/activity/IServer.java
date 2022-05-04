@@ -17,5 +17,6 @@ public interface IServer {
     void onDeviceDisconnected(ConnectedDevice connectedDevice);
     void onReceived(ConnectedDevice connectedDevice, String command);
     void sendToAll(String command);
-    void sendTo(ConnectedDevice connectedDevice);
+    void sendTo(ConnectedDevice connectedDevice, String command);
+    void sendPing(ConnectedDevice connectedDevice);
 }

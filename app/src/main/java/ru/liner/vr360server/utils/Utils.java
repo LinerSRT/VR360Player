@@ -15,5 +15,15 @@ public class Utils {
             e.printStackTrace();
         }
     }
+    public static boolean isNumeric(String string) {
+        if (string == null)
+            return false;
+        try {
+            double d = Double.parseDouble(string);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
+    }
 
 }

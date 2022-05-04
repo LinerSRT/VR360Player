@@ -32,7 +32,7 @@
         app:layout_constraintTop_toTopOf="@+id/imageView" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/devicePing"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
@@ -49,12 +49,12 @@
         android:id="@+id/deviceStatusText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
         android:text="Transferring video"
         android:textColor="@color/textSecondaryColor"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="@+id/deviceHostName"
-        app:layout_constraintEnd_toStartOf="@+id/textView"
+        app:layout_constraintStart_toEndOf="@+id/deviceHostName"
         app:layout_constraintTop_toTopOf="@+id/deviceHostName" />
 
     <ProgressBar
@@ -85,20 +85,8 @@
         tools:text="123/1234 kb" />
 
 
-    <TextView
-        android:id="@+id/deviceProgressBarData2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:textColor="@color/textSecondaryColor"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="@+id/seekBar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/seekBar"
-        tools:text="22:39/23:33" />
-
     <Button
-        android:id="@+id/button"
+        android:id="@+id/diconnectDevice"
         style="@style/AppTheme.Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -109,21 +97,21 @@
         android:text="Disconnect"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/view"
-        app:layout_constraintTop_toBottomOf="@+id/LImageButton" />
+        app:layout_constraintTop_toBottomOf="@+id/mediaControlLayout" />
 
 
     <Switch
+        android:id="@+id/deviceAllowPlay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:checked="true"
         android:text="Allow play"
         android:textColor="@color/textSecondaryColor"
         android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="@+id/button"
+        app:layout_constraintBottom_toBottomOf="@+id/diconnectDevice"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/LImageButton" />
+        app:layout_constraintTop_toTopOf="@+id/diconnectDevice" />
 
     <View
         android:id="@+id/view"
@@ -134,49 +122,70 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
-    <ru.liner.vr360server.views.LImageButton
-        android:id="@+id/LImageButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/circle"
-        android:backgroundTint="@color/backgroundColor"
-        android:src="@drawable/ic_baseline_play_arrow_24"
-        app:layout_constraintStart_toEndOf="@+id/view"
-        app:layout_constraintTop_toBottomOf="@+id/deviceHostName" />
-
-    <ru.liner.vr360server.views.LImageButton
-        android:id="@+id/LImageButton2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:background="@drawable/circle"
-        android:backgroundTint="@color/backgroundColor"
-        android:src="@drawable/ic_baseline_volume_down_24"
-        app:layout_constraintStart_toEndOf="@+id/LImageButton"
-        app:layout_constraintTop_toTopOf="@+id/LImageButton" />
-
-    <ru.liner.vr360server.views.LImageButton
-        android:id="@+id/LImageButton3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:background="@drawable/circle"
-        android:backgroundTint="@color/backgroundColor"
-        android:src="@drawable/ic_baseline_volume_up_24"
-        app:layout_constraintStart_toEndOf="@+id/LImageButton2"
-        app:layout_constraintTop_toTopOf="@+id/LImageButton" />
-
-    <SeekBar
-        android:id="@+id/seekBar"
+    <LinearLayout
+        android:id="@+id/mediaControlLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:progress="50"
-        app:layout_constraintBottom_toBottomOf="@+id/LImageButton"
-        app:layout_constraintEnd_toStartOf="@+id/deviceProgressBarData2"
-        app:layout_constraintStart_toEndOf="@+id/LImageButton3"
-        app:layout_constraintTop_toTopOf="@+id/LImageButton" />
+        android:gravity="center_vertical"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/view"
+        app:layout_constraintTop_toBottomOf="@+id/deviceStatusProgressBar">
+
+
+        <ru.liner.vr360server.views.LImageButton
+            android:id="@+id/devicePlayPause"
+            android:layout_width="40dp"
+            android:layout_marginEnd="8dp"
+            android:layout_height="40dp"
+            android:background="@drawable/circle"
+            android:backgroundTint="@color/backgroundColor"
+            android:src="@drawable/ic_baseline_play_arrow_24"
+            app:layout_constraintStart_toEndOf="@+id/view"
+            app:layout_constraintTop_toBottomOf="@+id/deviceHostName" />
+
+        <ru.liner.vr360server.views.LImageButton
+            android:id="@+id/deviceVolumeDown"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/circle"
+            android:backgroundTint="@color/backgroundColor"
+            android:src="@drawable/ic_baseline_volume_down_24"
+            app:layout_constraintStart_toEndOf="@+id/devicePlayPause"
+            app:layout_constraintTop_toTopOf="@+id/devicePlayPause" />
+
+        <ru.liner.vr360server.views.LImageButton
+            android:id="@+id/deviceVolumeUp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/circle"
+            android:backgroundTint="@color/backgroundColor"
+            android:src="@drawable/ic_baseline_volume_up_24"
+            app:layout_constraintStart_toEndOf="@+id/deviceVolumeDown"
+            app:layout_constraintTop_toTopOf="@+id/devicePlayPause" />
+
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:progress="50"
+            app:layout_constraintBottom_toBottomOf="@+id/devicePlayPause"
+            app:layout_constraintEnd_toStartOf="@+id/deviceProgressBarData2"
+            app:layout_constraintStart_toEndOf="@+id/deviceVolumeUp"
+            app:layout_constraintTop_toTopOf="@+id/devicePlayPause" />
+
+        <TextView
+            android:id="@+id/deviceProgressBarData2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/textSecondaryColor"
+            android:textSize="12sp"
+            tools:text="22:39/23:33" />
+
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

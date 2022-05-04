@@ -104,7 +104,7 @@ public class TCPServer {
         }
     }
 
-    public boolean isServerOn() {
+    public boolean isRunning() {
         return serverSocket != null && !serverSocket.isClosed();
     }
 
@@ -120,7 +120,7 @@ public class TCPServer {
         public void run() {
             try {
                 InputStream inputStream = socket.getInputStream();
-                if (isServerOn()) {
+                if (isRunning()) {
                     while (true) {
                         byte[] byteBuffer = new byte[2048];
                         int size = inputStream.read(byteBuffer);
@@ -156,7 +156,7 @@ public class TCPServer {
 
         @Override
         public Void doInBackground(Void... params) {
-            while (isServerOn()) {
+            while (isRunning()) {
                 try {
                     Socket socket = serverSocket.accept();
                     clientSocketList.add(socket);
@@ -174,12 +174,12 @@ public class TCPServer {
     public interface Callback {
         @CallSuper
         default void onStarted(TCPServer socket) {
-            Log.d(TAG, "onStarted: " + socket.toString());
+
         }
 
         @CallSuper
         default void onConnected(Socket socket) {
-            Log.d(TAG, "onConnected: " + socket.toString());
+
         }
 
         @CallSuper
@@ -188,17 +188,17 @@ public class TCPServer {
 
         @CallSuper
         default void onReceived(Socket socket, String string) {
-            Log.d(TAG, "onReceived: " + string);
+
         }
 
         @CallSuper
         default void onDisconnected(Socket socket) {
-            Log.d(TAG, "onDisconnected: " + socket.toString());
+
         }
 
         @CallSuper
         default void onStopped(TCPServer socket) {
-            Log.d(TAG, "onStopped: " + socket.toString());
+
         }
     }
 }

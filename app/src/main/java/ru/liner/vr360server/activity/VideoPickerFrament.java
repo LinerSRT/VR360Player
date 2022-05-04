@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import com.github.florent37.shapeofview.shapes.RoundRectView;
 
+import ru.liner.vr360server.Core;
 import ru.liner.vr360server.utils.FileUtils;
 import ru.liner.vr360server.R;
 import ru.liner.vr360server.utils.VideoFile;
@@ -39,8 +40,8 @@ public class VideoPickerFrament extends Fragment {
         progress = view.findViewById(R.id.mediaFileProgress);
         progress.setVisibility(View.VISIBLE);
         recyclerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2, RecyclerView.VERTICAL, false));
-        videoPickerAdapter = new VideoPickerAdapter(container.getContext(), FileUtils.getVideoFromDevice(container.getContext()));
+        recyclerView.setLayoutManager(new GridLayoutManager(Core.getContext(), 2, RecyclerView.VERTICAL, false));
+        videoPickerAdapter = new VideoPickerAdapter(Core.getContext(), FileUtils.getVideoFromDevice(Core.getContext()));
         videoPickerAdapter.setSelectionCallback(new VideoPickerAdapter.SelectionCallback() {
             @Override
             public void onSelected(int position, VideoFile model) {

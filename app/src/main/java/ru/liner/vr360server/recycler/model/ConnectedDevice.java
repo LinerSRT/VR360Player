@@ -1,6 +1,8 @@
 package ru.liner.vr360server.recycler.model;
 
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author : "Line'R"
@@ -10,11 +12,11 @@ import java.net.Socket;
 public class ConnectedDevice {
     private final Socket socket;
     private boolean isFetchingStream;
-    private int fetchProgress;
-    private int fetchDownloaded;
-    private int fetchTotal;
+    private DownloadProgress downloadProgress;
     private boolean isReadyToPlay;
     private boolean isPaused;
+    private boolean allowPlay = true;
+    private long pingMs;
 
     public ConnectedDevice(Socket socket) {
         this.socket = socket;
@@ -32,28 +34,12 @@ public class ConnectedDevice {
         isFetchingStream = fetchingStream;
     }
 
-    public int getFetchProgress() {
-        return fetchProgress;
+    public void setDownloadProgress(DownloadProgress downloadProgress) {
+        this.downloadProgress = downloadProgress;
     }
 
-    public void setFetchProgress(int fetchProgress) {
-        this.fetchProgress = fetchProgress;
-    }
-
-    public int getFetchDownloaded() {
-        return fetchDownloaded;
-    }
-
-    public void setFetchDownloaded(int fetchDownloaded) {
-        this.fetchDownloaded = fetchDownloaded;
-    }
-
-    public int getFetchTotal() {
-        return fetchTotal;
-    }
-
-    public void setFetchTotal(int fetchTotal) {
-        this.fetchTotal = fetchTotal;
+    public DownloadProgress getDownloadProgress() {
+        return downloadProgress;
     }
 
     public boolean isReadyToPlay() {
@@ -72,16 +58,31 @@ public class ConnectedDevice {
         isPaused = paused;
     }
 
+    public void setPingMs(long pingMs) {
+        this.pingMs = pingMs;
+    }
+
+    public void setAllowPlay(boolean allowPlay) {
+        this.allowPlay = allowPlay;
+    }
+
+    public boolean isAllowPlay() {
+        return allowPlay;
+    }
+
+    public long getPingMs() {
+        return pingMs;
+    }
+
     @Override
     public String toString() {
         return "ConnectedDevice{" +
                 "socket=" + socket +
                 ", isFetchingStream=" + isFetchingStream +
-                ", fetchProgress=" + fetchProgress +
-                ", fetchDownloaded=" + fetchDownloaded +
-                ", fetchTotal=" + fetchTotal +
+                ", downloadProgress=" + downloadProgress.toString() +
                 ", isReadyToPlay=" + isReadyToPlay +
                 ", isPaused=" + isPaused +
+                ", pingMs=" + pingMs +
                 '}';
     }
 }
