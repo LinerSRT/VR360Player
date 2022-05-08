@@ -49,7 +49,6 @@ public class IPPublisher extends Thread {
             String localhost = Networks.getLocalIpAddress();
             if(localhost != null){
                 udpMulticast.writeString(localhost);
-                Utils.sleep(TimeUnit.SECONDS.toMillis(1));
             }
         }
     }

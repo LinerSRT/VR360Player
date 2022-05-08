@@ -162,8 +162,7 @@ public class TCPServer {
                     clientSocketList.add(socket);
                     handler.post(() -> callback.onConnected(socket));
                     new Thread(new SocketThread(socket)).start();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException ignored) {
                 }
             }
             return null;
@@ -173,12 +172,14 @@ public class TCPServer {
 
     public interface Callback {
         @CallSuper
-        default void onStarted(TCPServer socket) {
+        default void onStarted(TCPServer server) {
+            Log.d(TAG, "onStarted: "+server.toString());
 
         }
 
         @CallSuper
         default void onConnected(Socket socket) {
+            Log.d(TAG, "onConnected: "+socket.toString());
 
         }
 
@@ -188,17 +189,20 @@ public class TCPServer {
 
         @CallSuper
         default void onReceived(Socket socket, String string) {
+            if(!string.equals("check_ping"))
+                Log.d(TAG, "onReceived: "+socket.getInetAddress().toString()+" | "+string);
 
         }
 
         @CallSuper
         default void onDisconnected(Socket socket) {
+            Log.d(TAG, "onDisconnected: "+socket.toString());
 
         }
 
         @CallSuper
-        default void onStopped(TCPServer socket) {
-
+        default void onStopped(TCPServer server) {
+            Log.d(TAG, "onStopped: "+server.toString());
         }
     }
 }

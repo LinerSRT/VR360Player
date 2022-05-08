@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:background="@color/backgroundColor"
+    android:layout_height="match_parent">
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/socketRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:listitem="@layout/device_adapter_holder"
+        style="@style/ScrollbarStyle"/>
+
+    <TextView
+        android:id="@+id/socketRecyclerEmpty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawableTop="@drawable/warning_icon"
+        android:text="No devices found"
+        android:textColor="@color/textSecondaryColor"
+        android:elevation="1dp"
+        android:textSize="@dimen/textSecondarySize"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ru.liner.vr360server.views.SwipeButton
+        android:id="@+id/startServerButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="8dp"
+        app:button_background="@drawable/shape_rounded_primary"
+        app:button_bottom_padding="8dp"
+        app:button_right_padding="8dp"
+        app:button_top_padding="8dp"
+        android:elevation="1dp"
+        app:button_left_padding="8dp"
+        app:button_image_disabled="@drawable/ic_baseline_wifi_tethering_24"
+        app:button_image_enabled="@drawable/stop_stream"
+        app:button_image_height="48dp"
+        app:button_image_width="48dp"
+        app:has_activate_state="true"
+        app:initial_state="disabled"
+        app:inner_text="Swipe to enable"
+        app:inner_text_background="@drawable/shape_rounded_background"
+        app:inner_text_bottom_padding="12dp"
+        app:inner_text_color="@android:color/white"
+        app:inner_text_size="@dimen/textSecondarySize"
+        app:inner_text_top_padding="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ru.liner.vr360server.views.SwipeButton
+        android:id="@+id/startPlayButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="1dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="8dp"
+        app:button_background="@drawable/shape_rounded_green"
+        app:button_bottom_padding="8dp"
+        app:button_image_disabled="@drawable/ic_baseline_play_arrow_24"
+        app:button_image_enabled="@drawable/ic_baseline_stop_24"
+        app:button_image_height="48dp"
+        app:button_image_width="48dp"
+        app:button_left_padding="8dp"
+        app:button_right_padding="8dp"
+        app:button_top_padding="8dp"
+        app:has_activate_state="true"
+        app:initial_state="disabled"
+        app:inner_text="Swipe to start play"
+        app:inner_text_background="@drawable/shape_rounded_background"
+        app:inner_text_bottom_padding="12dp"
+        app:inner_text_color="@android:color/white"
+        app:inner_text_size="@dimen/textSecondarySize"
+        app:inner_text_top_padding="12dp"
+        app:layout_constraintBottom_toTopOf="@+id/startServerButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

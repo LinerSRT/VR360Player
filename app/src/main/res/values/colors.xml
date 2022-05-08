@@ -7,8 +7,8 @@
     <color name="textColor">#F4F4F4</color>
     <color name="textSecondaryColor">#D8D8D8</color>
     <color name="textDisabledColor">#979797</color>
-    <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="red">#D50000</color>
     <color name="green">#2E7D32</color>
+    <color name="disabledColor">#4A4A4A</color>
 </resources>

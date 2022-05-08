@@ -1,242 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:animateLayoutChanges="true"
     android:layout_height="match_parent"
-    android:background="@color/backgroundColor"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:animateLayoutChanges="true"
+    android:background="?backgroundColor"
     android:orientation="vertical">
 
-
-    <LinearLayout
-        android:id="@+id/linearLayout"
+    <ru.liner.vr360server.views.ExpandLayout
+        android:id="@+id/notificationLayout"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:background="@color/primaryColor"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        app:el_duration="300"
         android:elevation="8dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:keepScreenOn="true"
-            android:text="@string/app_name"
-            android:textColor="@color/textColor"
-            android:textSize="22sp" />
-        <TextView
-            android:id="@+id/applicationStatusText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:drawablePadding="4dp"
-            android:gravity="center"
-            android:keepScreenOn="false"
-            android:layout_marginStart="8dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:text=""
-            android:background="@drawable/background_round"
-            android:textColor="@color/textColor"
-            android:textSize="14sp"
-            app:layout_constraintTop_toBottomOf="@+id/streamingInfoLayout" />
+       <LinearLayout
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:orientation="vertical">
+           <TextView
+               android:id="@+id/notificationTitle"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               tools:text="Status text"
+               android:textSize="@dimen/textSize"
+               android:textStyle="bold"
+               android:textColor="@color/textColor"/>
+           <TextView
+               android:id="@+id/notificationText"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               tools:text="Descrition text"
+               android:textSize="@dimen/textSecondarySize"
+               android:textColor="@color/textSecondaryColor"/>
+       </LinearLayout>
+    </ru.liner.vr360server.views.ExpandLayout>
 
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/streamingInfoLayout"
-        android:visibility="gone"
-        tools:visibility="visible"
-        android:layout_width="match_parent"
-        android:background="@color/primarySecondaryColor"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="8dp"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginEnd="8dp"
-                android:drawableStart="@drawable/ic_baseline_info_24"
-                android:drawablePadding="4dp"
-                android:gravity="center"
-                android:keepScreenOn="false"
-                android:text="Streaming at:"
-                android:textColor="@color/textColor"
-                android:textSize="14sp" />
-
-
-            <TextView
-                android:id="@+id/streamingHost"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:gravity="center"
-                android:keepScreenOn="false"
-                tools:text="http://192.168.0.1:8888"
-                android:textColor="@color/textColor"
-                android:textSize="14sp"
-                android:textStyle="italic" />
-
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginEnd="8dp"
-                android:gravity="center"
-                android:keepScreenOn="false"
-                android:drawableStart="@drawable/connected_devices_12"
-                android:drawablePadding="4dp"
-                android:text="Connected devices:"
-                android:textColor="@color/textColor"
-                android:textSize="14sp" />
-
-
-            <TextView
-                android:id="@+id/connectedDeviceCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:gravity="center"
-                android:keepScreenOn="false"
-                tools:text="11"
-                android:textColor="@color/textColor"
-                android:textSize="14sp"
-                android:textStyle="italic" />
-
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginEnd="8dp"
-                android:gravity="center"
-                android:keepScreenOn="false"
-                android:drawableStart="@drawable/ic_baseline_ondemand_video_12"
-                android:drawablePadding="4dp"
-                android:text="Streaming:"
-                android:textColor="@color/textColor"
-                android:textSize="14sp" />
-
-            <ru.liner.vr360server.views.MarqueeTextView
-                android:id="@+id/streamingPath"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:gravity="center"
-                android:keepScreenOn="false"
-                tools:text="sdcard/videos/1.mp4"
-                android:textColor="@color/textColor"
-                android:textSize="14sp"
-                android:textStyle="italic" />
-
-        </LinearLayout>
-    </LinearLayout>
-
-
-
-
-
-    <TextView
-        android:id="@+id/emptyDevices"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:drawableTop="@drawable/ic_baseline_warning_24"
-        android:elevation="4dp"
-        android:text="No connected devices"
-        android:textColor="@color/textColor"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/deviceRecycler"
-        style="@style/ScrollbarStyle"
+    <ru.liner.vr360server.views.ExtendedViewPager
+        android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginEnd="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_weight="1" />
 
-        app:layout_constraintTop_toBottomOf="@+id/streamingInfoLayout"
-        tools:itemCount="10"
-        tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/device_list_binder"
-        tools:orientation="vertical"
-        tools:scrollbars="vertical" />
-
-
-    <LinearLayout
+    <com.skydoves.androidbottombar.AndroidBottomBarView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:elevation="1dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:layout_height="64dp"
+        android:id="@+id/bottomNavigation"
+        android:background="@color/backgroundSecondaryColor"
+        app:bottomBar_duration="300"
+        android:elevation="8dp"
+        app:bottomBar_flavor="icon"
+        app:bottomBar_indicator_color="@color/primaryColor"
+        app:bottomBar_indicator_height="4dp"
+        app:bottomBar_indicator_padding="6dp"
+        app:bottomBar_indicator_radius="12dp"
+        app:bottomBar_indicator_visible="true"
+        app:bottomBar_menuAnimation="overshoot"
+        app:bottomBar_selectedIndex="1" />
 
-        <ru.liner.vr360server.views.LImageButton
-            android:id="@+id/selectVideoButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/circle"
-            android:elevation="1dp"
-            android:padding="16dp"
-            android:src="@drawable/ic_baseline_video_settings_24" />
-
-        <ru.liner.vr360server.views.LImageButton
-            android:id="@+id/playStopButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/circle"
-            android:backgroundTint="@color/green"
-            android:elevation="1dp"
-            android:padding="16dp"
-            android:src="@drawable/ic_baseline_play_arrow_24" />
-
-        <ru.liner.vr360server.views.LImageButton
-            android:id="@+id/startIPPublisher"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/circle"
-            android:backgroundTint="@color/green"
-            android:elevation="1dp"
-            android:padding="16dp"
-            android:src="@drawable/ic_baseline_cell_tower_24" />
-
-    </LinearLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

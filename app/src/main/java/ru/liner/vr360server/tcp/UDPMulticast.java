@@ -89,8 +89,7 @@ public class UDPMulticast implements Runnable {
                 DatagramPacket packet = new DatagramPacket(new byte[bufferSize], bufferSize);
                 try {
                     multicastSocket.receive(packet);
-                } catch (SocketException e) {
-                    e.printStackTrace();
+                } catch (SocketException ignored) {
                     if (isClosed()) {
                         break;
                     }

@@ -1,97 +1,48 @@
 package ru.liner.vr360server.activity;
 
-import android.annotation.SuppressLint;
-import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.view.View;
-import android.widget.LinearLayout;
+import android.util.Log;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.CallSuper;
+import androidx.annotation.ColorRes;
 import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import java.io.IOException;
+import com.google.gson.Gson;
+import com.skydoves.androidbottombar.AndroidBottomBarView;
+import com.skydoves.androidbottombar.BottomMenuItem;
+
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.ArrayList;
+import java.util.List;
 
 import ru.liner.vr360server.CoreActivity;
 import ru.liner.vr360server.R;
-import ru.liner.vr360server.recycler.adapter.DeviceAdapter;
-import ru.liner.vr360server.recycler.model.ConnectedDevice;
-import ru.liner.vr360server.recycler.model.DownloadProgress;
+import ru.liner.vr360server.fragments.DevicesFragment;
+import ru.liner.vr360server.fragments.SettingsFragment;
+import ru.liner.vr360server.fragments.VideosFragment;
+import ru.liner.vr360server.server.ConnectedClient;
 import ru.liner.vr360server.server.IPPublisher;
-import ru.liner.vr360server.server.MediaStreamingServer;
 import ru.liner.vr360server.tcp.TCPServer;
 import ru.liner.vr360server.utils.Constant;
-import ru.liner.vr360server.utils.Networks;
-import ru.liner.vr360server.utils.Utils;
-import ru.liner.vr360server.utils.VideoFile;
-import ru.liner.vr360server.views.BaseDialog;
-import ru.liner.vr360server.views.BaseDialogBuilder;
-import ru.liner.vr360server.views.LImageButton;
-import ru.liner.vr360server.views.MarqueeTextView;
+import ru.liner.vr360server.utils.FragmentAdapter;
+import ru.liner.vr360server.utils.ViewUtils;
+import ru.liner.vr360server.utils.pagetransformer.ParallaxTransformer;
+import ru.liner.vr360server.views.ExpandLayout;
+import ru.liner.vr360server.views.ExtendedViewPager;
 
 
-@SuppressWarnings("FieldCanBeLocal")
-@SuppressLint("WrongConstant")
-public class MainActivity extends CoreActivity implements IServer, IVideoStream {
-    private boolean mediaServerRunning;
-    private boolean isIPPublisherRunning;
-    private boolean syncVideoStarted;
-
+public class MainActivity extends CoreActivity implements IServer {
+    private AndroidBottomBarView bottomNavigation;
+    private ExtendedViewPager viewPager;
+    private ExpandLayout notificationLayout;
+    private TextView notificationTitle;
+    private TextView notificationText;
+    private List<Socket> socketList;
     public static TCPServer tcpServer;
     private IPPublisher ipPublisher;
-    private MediaStreamingServer mediaStreamingServer;
-    private DeviceAdapter deviceAdapter;
-
-    private RecyclerView deviceRecycler;
-    private TextView emptyDevices;
-    private LinearLayout streamingInfoLayout;
-    private TextView streamingHost;
-    private TextView connectedDeviceCount;
-    private MarqueeTextView streamingPath;
-    private TextView applicationStatusText;
-    private LImageButton playStopButton;
-    private LImageButton selectVideoButton;
-    private LImageButton startIPPublisher;
-
-
-    private VideoFile videoFile;
-
-
-    private void findViews() {
-        deviceRecycler = findViewById(R.id.deviceRecycler);
-        emptyDevices = findViewById(R.id.emptyDevices);
-        streamingInfoLayout = findViewById(R.id.streamingInfoLayout);
-        streamingHost = findViewById(R.id.streamingHost);
-        connectedDeviceCount = findViewById(R.id.connectedDeviceCount);
-        streamingPath = findViewById(R.id.streamingPath);
-        applicationStatusText = findViewById(R.id.applicationStatusText);
-        playStopButton = findViewById(R.id.playStopButton);
-        selectVideoButton = findViewById(R.id.selectVideoButton);
-        startIPPublisher = findViewById(R.id.startIPPublisher);
-    }
-
-    private void setApplicationStatus(@NonNull String text) {
-        runOnUiThread(() -> applicationStatusText.setText(text));
-    }
-
-    private void setApplicationStatus(@NonNull String text, int timeout) {
-        String ret = applicationStatusText.getText().toString();
-        runOnUiThread(() -> applicationStatusText.setText(text));
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                setApplicationStatus(ret);
-            }
-        }, timeout);
-    }
-
+    private List<IDataReceiver> dataReceiverList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -99,65 +50,54 @@ public class MainActivity extends CoreActivity implements IServer, IVideoStream 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         setContentView(R.layout.activity_main);
-        findViews();
-        deviceRecycler.setLayoutManager(new LinearLayoutManager(this));
-        deviceAdapter = new DeviceAdapter(this, this);
-        deviceRecycler.setAdapter(deviceAdapter);
-        selectVideoButton.setEnabled(false);
-        playStopButton.setEnabled(false);
-        startIPPublisher.setClickCallback(button -> {
-            startIPPublisher.setEnabled(false);
-            if (!isServerRunning()) {
-                startIPPublisher();
-                startServer();
-                selectVideoButton.setEnabled(true);
-                playStopButton.setEnabled(false);
-                setApplicationStatus("Waiting for clients");
-            } else {
-                stopIPPublisher();
-                stopServer();
-                videoFile = null;
-                selectVideoButton.setEnabled(false);
-                playStopButton.setEnabled(false);
-                streamingInfoLayout.setVisibility(View.GONE);
-                setApplicationStatus("Connections disabled");
-            }
-            startIPPublisher.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, isServerRunning() ? R.color.red : R.color.green)));
+        notificationLayout = findViewById(R.id.notificationLayout);
+        notificationTitle = findViewById(R.id.notificationTitle);
+        notificationText = findViewById(R.id.notificationText);
+        bottomNavigation = findViewById(R.id.bottomNavigation);
+        viewPager = findViewById(R.id.viewPager);
+        socketList = new ArrayList<>();
+        dataReceiverList = new ArrayList<>();
+        FragmentAdapter fragmentAdapter = new FragmentAdapter(getSupportFragmentManager());
+        fragmentAdapter.add(new DevicesFragment(this));
+        fragmentAdapter.add(new VideosFragment(this));
+        fragmentAdapter.add(new SettingsFragment(this));
+        viewPager.setPagingEnabled(false);
+        viewPager.setAdapter(fragmentAdapter);
+        viewPager.setOffscreenPageLimit(3);
+        viewPager.setPageTransformer(false, new ParallaxTransformer());
+        List<BottomMenuItem> bottomMenuItems = new ArrayList<>();
+        bottomMenuItems.add(new BottomMenuItem(this)
+                .setTitle("Devices")
+                .setIcon(R.drawable.ic_baseline_devices_other_24)
+                .setIconSize(24)
+                .build());
+        bottomMenuItems.add(new BottomMenuItem(this)
+                .setTitle("Videos")
+                .setIcon(R.drawable.ic_baseline_folder_24)
+                .setIconSize(24)
+                .build());
+        bottomMenuItems.add(new BottomMenuItem(this)
+                .setTitle("Settings")
+                .setIcon(R.drawable.ic_baseline_settings_24)
+                .setIconSize(24)
+                .build());
+        bottomNavigation.addBottomMenuItems(bottomMenuItems);
+        bottomNavigation.setOnBottomMenuInitializedListener(() -> {
+            bottomNavigation.bindViewPager(viewPager);
+            viewPager.setCurrentItem(0);
         });
+        bottomNavigation.setOnMenuItemSelectedListener((i, bottomMenuItem, b) -> viewPager.setCurrentItem(i));
+    }
 
+    @Override
+    public void register(IDataReceiver dataReceiver) {
+        if(!dataReceiverList.contains(dataReceiver))
+        dataReceiverList.add(dataReceiver);
+    }
 
-        selectVideoButton.setClickCallback(button -> {
-            if (!isVideoSelected()) {
-                selectVideo();
-            } else {
-                sendToAll("stop_stream");
-                stopMediaServer();
-                setApplicationStatus("Ready for start streaming");
-            }
-            playStopButton.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, isVideoSelected() ? R.drawable.ic_baseline_stop_24 : R.drawable.ic_baseline_play_arrow_24));
-            playStopButton.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, isVideoSelected() ? R.color.red : R.color.green)));
-            playStopButton.setEnabled(false);
-        });
-
-
-        playStopButton.setClickCallback(button -> {
-            if (videoFile == null) {
-                setApplicationStatus("No selected video, aborting", 2000);
-            } else {
-                if (!isVideoPlaying()) {
-                    playStopButton.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_baseline_stop_24));
-                    playStopButton.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, R.color.red)));
-                    setApplicationStatus("Streaming video");
-                    sendToAll("play_stream");
-                } else {
-                    sendToAll("pause_stream");
-                    //stopMediaServer();
-                    playStopButton.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_baseline_play_arrow_24));
-                    playStopButton.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, R.color.green)));
-                    setApplicationStatus("Ready to stream");
-                }
-            }
-        });
+    @Override
+    public void unregister(IDataReceiver dataReceiver) {
+        dataReceiverList.remove(dataReceiver);
     }
 
     @Override
@@ -168,43 +108,46 @@ public class MainActivity extends CoreActivity implements IServer, IVideoStream 
             @Override
             public void onStarted(TCPServer tcpServer) {
                 TCPServer.Callback.super.onStarted(tcpServer);
-                startIPPublisher.setEnabled(true);
+                if (ipPublisher == null)
+                    ipPublisher = new IPPublisher();
+                ipPublisher.start();
             }
 
             @Override
             public void onConnected(Socket socket) {
                 TCPServer.Callback.super.onConnected(socket);
-                ConnectedDevice connectedDevice = new ConnectedDevice(socket);
-                if (!deviceAdapter.containDevice(connectedDevice))
-                    runOnUiThread(() -> onDeviceConnect(connectedDevice));
+                if (!isConnected(socket)) {
+                    socketList.add(socket);
+                    runOnUiThread(() -> onSocketConnected(socket, socketList.size() - 1));
+                }
             }
 
             @Override
             public void onDisconnected(Socket socket) {
                 TCPServer.Callback.super.onDisconnected(socket);
-                ConnectedDevice connectedDevice = new ConnectedDevice(socket);
-                int index = deviceAdapter.getDeviceIndex(connectedDevice);
+                int index = getSocketIndex(socket);
                 if (index != -1) {
-                    runOnUiThread(() -> {
-                        MainActivity.this.onDeviceDisconnected(deviceAdapter.getConnectedDevice(index));
-                    });
+                    socketList.remove(index);
+                    runOnUiThread(() -> onSocketDisconnected(socket, index));
                 }
             }
 
             @Override
             public void onStopped(TCPServer tcpServer) {
                 TCPServer.Callback.super.onStopped(tcpServer);
-                startIPPublisher.setEnabled(true);
+                if (ipPublisher != null) {
+                    ipPublisher.interrupt();
+                    ipPublisher = null;
+                }
             }
 
 
             @Override
-            public void onReceived(Socket device, String data) {
-                TCPServer.Callback.super.onReceived(device, data);
-                ConnectedDevice connectedDevice = new ConnectedDevice(device);
-                int index = deviceAdapter.getDeviceIndex(connectedDevice);
+            public void onReceived(Socket socket, String data) {
+                TCPServer.Callback.super.onReceived(socket, data);
+                int index = getSocketIndex(socket);
                 if (index != -1) {
-                    MainActivity.this.onReceived(deviceAdapter.getConnectedDevice(index), data);
+                    runOnUiThread(() -> onReceived(socket, data));
                 }
             }
         });
@@ -221,320 +164,136 @@ public class MainActivity extends CoreActivity implements IServer, IVideoStream 
         return tcpServer != null && tcpServer.isRunning();
     }
 
+    @CallSuper
     @Override
-    public void startMediaServer(VideoFile videoFile) {
-        mediaStreamingServer = new MediaStreamingServer(videoFile.getFullPath(), Constant.SERVER_STREAM_VIDEO_PORT);
-        try {
-            mediaStreamingServer.start();
-            mediaServerRunning = true;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void onSocketConnected(Socket socket, int position) {
+        for(IDataReceiver dataReceiver:dataReceiverList)
+            dataReceiver.onSocketConnected(socket, position);
     }
 
+    @CallSuper
     @Override
-    public void stopMediaServer() {
-        if (mediaStreamingServer != null) {
-            mediaStreamingServer.closeAllConnections();
-            mediaStreamingServer.stop();
-            mediaServerRunning = false;
-        }
+    public void onSocketDisconnected(Socket socket, int position) {
+        for(IDataReceiver dataReceiver:dataReceiverList)
+            dataReceiver.onSocketDisconnected(socket, position);
     }
 
+    @CallSuper
     @Override
-    public boolean isMediaServerRunning() {
-        return mediaServerRunning;
+    public void onReceived(Socket socket, String command) {
+        for(IDataReceiver dataReceiver:dataReceiverList)
+            dataReceiver.onReceived(socket, command);
     }
 
 
     @Override
-    public void startIPPublisher() {
-        if (ipPublisher == null)
-            ipPublisher = new IPPublisher();
-        ipPublisher.start();
-        isIPPublisherRunning = true;
-    }
-
-    @Override
-    public void stopIPPublisher() {
-        if (ipPublisher != null) {
-            ipPublisher.interrupt();
-            ipPublisher = null;
-            isIPPublisherRunning = false;
-        }
-    }
-
-    @Override
-    public boolean isIPPublisherRunning() {
-        return isIPPublisherRunning;
-    }
-
-    @Override
-    public void onDeviceConnect(ConnectedDevice connectedDevice) {
-        deviceAdapter.addDevice(connectedDevice);
-        emptyDevices.setVisibility(deviceAdapter.getItemCount() != 0 ? View.GONE : View.VISIBLE);
-        connectedDeviceCount.setText(String.valueOf(deviceAdapter.getItemCount()));
-        setApplicationStatus("New device connected " + Networks.getHost(connectedDevice.getSocket().getInetAddress()), 2000);
-    }
-
-    @Override
-    public void onDeviceDisconnected(ConnectedDevice connectedDevice) {
-        deviceAdapter.removeDevice(connectedDevice);
-        emptyDevices.setVisibility(deviceAdapter.getItemCount() != 0 ? View.GONE : View.VISIBLE);
-        connectedDeviceCount.setText(String.valueOf(deviceAdapter.getItemCount()));
-        setApplicationStatus("Device disconnected " + Networks.getHost(connectedDevice.getSocket().getInetAddress()), 2000);
-    }
-
-    @Override
-    public void onReceived(ConnectedDevice connectedDevice, String command) {
-        if (command.contains("preparing_started")) {
-            connectedDevice.setFetchingStream(true);
-            playStopButton.setEnabled(false);
-            selectVideoButton.setEnabled(false);
-        } else if (command.contains("preparing_progress")) {
-            String[] dataset = command.split("@");
-            System.out.println(Arrays.toString(dataset));
-            if(dataset.length >= 4) {
-                connectedDevice.setFetchingStream(true);
-                DownloadProgress downloadProgress = connectedDevice.getDownloadProgress();
-                if (downloadProgress == null)
-                    downloadProgress = new DownloadProgress();
-                if (Utils.isNumeric(dataset[1]))
-                    downloadProgress.downloadProgress = (int) Long.parseLong(dataset[1]);
-                if (Utils.isNumeric(dataset[2]))
-                    downloadProgress.downloadedBytes = (int) Long.parseLong(dataset[2]);
-                if (Utils.isNumeric(dataset[3]))
-                    downloadProgress.totalBytes = (int) Long.parseLong(dataset[3]);
-                if (Utils.isNumeric(dataset[4]))
-                    downloadProgress.downloadSpeed = (int) Long.parseLong(dataset[4]);
-                connectedDevice.setDownloadProgress(downloadProgress);
-            }
-        } else if (command.contains("preparing_finished")) {
-            connectedDevice.setReadyToPlay(true);
-            connectedDevice.setFetchingStream(false);
-        } else if (command.contains("answer_ping")) {
-            connectedDevice.setPingMs(System.currentTimeMillis() - pingStart);
-        }
-        deviceAdapter.updateDevice(connectedDevice);
-        if (isSyncStarted() && isSyncFinished()) {
-            selectVideoButton.setEnabled(true);
-            playStopButton.setEnabled(true);
-        }
-    }
-
-    @Override
-    public void sendToAll(String command) {
+    public void send(String command) {
         if (isServerRunning())
             tcpServer.sendToAll(command);
     }
 
     @Override
-    public void sendTo(ConnectedDevice connectedDevice, String command) {
+    public void sendToSocket(Socket socket, String command) {
         if (isServerRunning())
-            tcpServer.sendTo(connectedDevice.getSocket(), command);
+            tcpServer.sendTo(socket, command);
     }
 
-    private long pingStart;
-
     @Override
-    public void sendPing(ConnectedDevice connectedDevice) {
-        pingStart = System.currentTimeMillis();
-        sendTo(connectedDevice, "check_ping");
-
+    public List<Socket> getSocketList() {
+        return socketList;
     }
 
+    @Override
+    public boolean hasConnectedSockets() {
+        return !socketList.isEmpty();
+    }
 
     @Override
-    public void selectVideo() {
-        BaseDialog baseDialog = new BaseDialogBuilder(MainActivity.this)
-                .setDialogTitle("Choose video")
-                .setDialogText("Select video for stream")
-                .setDialogType(BaseDialogBuilder.Type.VIDEO_CHOOSE)
-                .setVideoPickListener(videoModel -> {
-                    videoFile = videoModel;
-                    stopMediaServer();
-                    startMediaServer(videoModel);
-                    if (!tcpServer.getClientSocketList().isEmpty()) {
-                        playStopButton.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, isVideoPlaying() ? R.drawable.ic_baseline_stop_24 : R.drawable.ic_baseline_play_arrow_24));
-                        playStopButton.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, isVideoPlaying() ? R.color.red : R.color.green)));
-                        selectVideoButton.setEnabled(false);
-                        playStopButton.setEnabled(false);
-                        syncVideo();
+    public void showNotification(String title, String message, @ColorRes int backgroundColor) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(notificationLayout.isExpanded()) {
+                    notificationLayout.setOnExpandCallback(new ExpandLayout.OnExpandCallback() {
+                        @Override
+                        public void onExpanded(ExpandLayout expandLayout) {
+
+                        }
+
+                        @Override
+                        public void onCollapsed(ExpandLayout expandLayout) {
+                            ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, R.color.backgroundColor));
+                            notificationTitle.setText(title);
+                            notificationText.setText(message);
+                            notificationLayout.setBackgroundColor(ContextCompat.getColor(MainActivity.this, backgroundColor));
+
+                            ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
+                            notificationLayout.expand();
+                        }
+                    });
+                    notificationLayout.collapse();
+                } else {
+                    notificationTitle.setText(title);
+                    notificationText.setText(message);
+                    notificationLayout.setBackgroundColor(ContextCompat.getColor(MainActivity.this, backgroundColor));
+                    ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
+                    notificationLayout.expand();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void dismissNotification() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                notificationLayout.setOnExpandCallback(new ExpandLayout.OnExpandCallback() {
+                    @Override
+                    public void onExpanded(ExpandLayout expandLayout) {
+
                     }
-                    streamingInfoLayout.setVisibility(View.VISIBLE);
-                    streamingHost.setText(String.format("http://%s:%s", Networks.getLocalIpAddress(), Constant.SERVER_STREAM_VIDEO_PORT));
-                    connectedDeviceCount.setText(String.valueOf(tcpServer.getClientSocketList().size()));
-                    streamingPath.setText(videoModel.getDisplayName());
-                }).build();
-        baseDialog.showDialog();
-    }
 
+                    @Override
+                    public void onCollapsed(ExpandLayout expandLayout) {
+                        ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, R.color.backgroundColor));
+                    }
+                });
+                notificationLayout.collapse();
 
-    @Override
-    public void syncVideo(ConnectedDevice connectedDevice) {
-        sendTo(connectedDevice, "prepare_stream@http://" + Networks.getLocalIpAddress() + ":" + Constant.SERVER_STREAM_VIDEO_PORT + "@" + videoFile.getDisplayName());
-        setApplicationStatus("Synchronizing stream with clients");
-        syncVideoStarted = true;
-    }
-    @Override
-    public void syncVideo() {
-        sendToAll("prepare_stream@http://" + Networks.getLocalIpAddress() + ":" + Constant.SERVER_STREAM_VIDEO_PORT + "@" + videoFile.getDisplayName());
-        setApplicationStatus("Synchronizing stream with clients");
-        syncVideoStarted = true;
+            }
+        });
     }
 
     @Override
-    public void playVideo(ConnectedDevice connectedDevice) {
-        sendTo(connectedDevice, "play_stream");
+    public String serialize(Object object) {
+        if(object == null)
+            return "";
+        return object.getClass().getSimpleName()+"@"+new Gson().toJson(object);
     }
 
     @Override
-    public void playVideo() {
-        sendToAll("play_stream");
+    public void send(ConnectedClient client, Object object) {
+        sendToSocket(client.getSocket(), serialize(object));
     }
 
     @Override
-    public void pauseVideo(ConnectedDevice connectedDevice) {
-        sendTo(connectedDevice, "pause_stream");
-    }
-
-    @Override
-    public void pauseVideo() {
-        sendToAll("pause_stream");
-    }
-
-    @Override
-    public void stopVideo(ConnectedDevice connectedDevice) {
-        sendTo(connectedDevice, "stop_stream");
-
-    }
-
-    @Override
-    public void stopVideo() {
-        sendToAll("stop_stream");
-    }
-
-    @Override
-    public void seekVideo(ConnectedDevice connectedDevice, int position) {
-        sendTo(connectedDevice, "seek_stream@"+position);
-
-    }
-
-    @Override
-    public void seekVideo(int position) {
-        sendToAll( "seek_stream@"+position);
-    }
-
-    @Override
-    public void increaseVolume(ConnectedDevice connectedDevice) {
-        sendTo(connectedDevice, "volume_up");
-
-    }
-
-    @Override
-    public void increaseVolume() {
-        sendToAll("volume_up");
-    }
-
-    @Override
-    public void decreaseVolume(ConnectedDevice connectedDevice) {
-        sendTo(connectedDevice,"volume_down");
-    }
-
-    @Override
-    public void decreaseVolume() {
-        sendToAll("volume_down");
-
-    }
-
-    @Override
-    public boolean isVideoSelected() {
-        return videoFile != null;
-    }
-
-    @Override
-    public boolean isSyncStarted() {
-        return syncVideoStarted;
-    }
-
-    @Override
-    public boolean isSyncFinished(ConnectedDevice connectedDevice) {
+    public boolean isConnected(Socket socket) {
+        if (socketList.isEmpty())
+            return false;
+        for (Socket s : socketList)
+            if(socket.getInetAddress().getHostAddress().equals(s.getInetAddress().getHostAddress()) && s.getLocalPort() == socket.getLocalPort())
+                return true;
         return false;
     }
 
     @Override
-    public boolean isSyncFinished() {
-        for (int i = 0; i < deviceAdapter.getItemCount(); i++) {
-            ConnectedDevice client = deviceAdapter.getConnectedDevice(i);
-            if (!client.isReadyToPlay())
-                return false;
+    public int getSocketIndex(Socket socket) {
+        for (int i = 0; i < socketList.size(); i++) {
+            Socket s = socketList.get(i);
+            if(socket.getInetAddress().getHostAddress().equals(s.getInetAddress().getHostAddress()) && s.getLocalPort() == socket.getLocalPort())
+                return i;
         }
-        syncVideoStarted = false;
-        return true;
-    }
-
-    @Override
-    public boolean isVideoPlaying(ConnectedDevice connectedDevice) {
-        return false;
-    }
-
-    @Override
-    public boolean isVideoPlaying() {
-        return false;
-    }
-
-    @Override
-    public boolean isVideoPaused(ConnectedDevice connectedDevice) {
-        return false;
-    }
-
-    @Override
-    public boolean isVideoPaused() {
-        return false;
-    }
-
-    @Override
-    public boolean isVideoStopped(ConnectedDevice connectedDevice) {
-        return false;
-    }
-
-    @Override
-    public boolean isVideoStopped() {
-        return false;
-    }
-
-    @Override
-    public int getVideoPosition(ConnectedDevice connectedDevice) {
-        return 0;
-    }
-
-    @Override
-    public int getVideoPosition() {
-        return 0;
-    }
-
-    @Override
-    public VideoFile getVideoFile() {
-        return videoFile;
-    }
-
-    @Override
-    public void deleteSyncedVideo(ConnectedDevice connectedDevice) {
-
-    }
-
-    @Override
-    public void deleteSyncedVideo() {
-
-    }
-
-    @Override
-    public void resetCamera(ConnectedDevice connectedDevice) {
-        sendTo(connectedDevice, "reset_camera");
-    }
-
-    @Override
-    public void resetCamera() {
-        sendToAll( "reset_camera");
+        return -1;
     }
 }

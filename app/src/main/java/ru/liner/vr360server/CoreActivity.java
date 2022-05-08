@@ -24,8 +24,8 @@ public class CoreActivity extends AppCompatActivity {
     @CallSuper
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        ViewUtils.setStatusBarColor(this, ContextCompat.getColor(this, R.color.primaryColor));
-        ViewUtils.setNavigationBarColor(this, ContextCompat.getColor(this, R.color.backgroundColor));
+        ViewUtils.setStatusBarColor(this, ContextCompat.getColor(this, R.color.backgroundColor));
+        ViewUtils.setNavigationBarColor(this, ContextCompat.getColor(this, R.color.backgroundSecondaryColor));
         requestPermissions(new String[]{
                 Manifest.permission.READ_EXTERNAL_STORAGE
         }, PERMISSION_REQUEST_CORE);
