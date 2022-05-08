@@ -71,12 +71,6 @@ public class DevicesFragment extends BaseFragment {
                 startPlayButton.disableButton(false);
                 startServerButton.setButtonBackground(ContextCompat.getDrawable(getContext(), R.drawable.shape_rounded_primary));
                 server.showNotification("Server stopped!", "All connections has been closed", R.color.red);
-                new Timer().schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        server.dismissNotification();
-                    }
-                }, 3000);
                 startPlayButton.setEnabled(false);
                 server.stopServer();
 

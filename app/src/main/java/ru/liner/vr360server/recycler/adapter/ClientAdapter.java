@@ -19,6 +19,7 @@ import ru.liner.vr360server.R;
 import ru.liner.vr360server.activity.IServer;
 import ru.liner.vr360server.server.ClientStatus;
 import ru.liner.vr360server.server.ConnectedClient;
+import ru.liner.vr360server.server.DisconnectStatus;
 import ru.liner.vr360server.utils.Comparator;
 import ru.liner.vr360server.utils.FileUtils;
 import ru.liner.vr360server.utils.Lists;
@@ -123,6 +124,13 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.ViewHolder
         } else {
             holder.clientStatus.setText("waiting for command");
         }
+        holder.clientDisconnect.setOnClickListener(v -> {
+            DisconnectStatus disconnectStatus = new DisconnectStatus();
+            disconnectStatus.exitOnDisconnect = false;
+            disconnectStatus.pauseOnDisconnect = true;
+            disconnectStatus.shouldReconnect = false;
+            server.send(client, disconnectStatus);
+        });
     }
 
     @Override
@@ -135,6 +143,7 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.ViewHolder
         private final TextView clientStatus;
         private final ProgressBar clientProgressBar;
         private final TextView clientProgressBarText;
+        private final TextView clientDisconnect;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -142,6 +151,7 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.ViewHolder
             clientStatus = itemView.findViewById(R.id.clientStatus);
             clientProgressBar = itemView.findViewById(R.id.clientProgressBar);
             clientProgressBarText = itemView.findViewById(R.id.clientProgressBarText);
+            clientDisconnect = itemView.findViewById(R.id.clientDisconnect);
         }
     }
 }

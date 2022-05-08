@@ -1,6 +1,8 @@
 package ru.liner.vr360server.tcp;
 
 
+import android.system.ErrnoException;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -70,7 +72,7 @@ public class UDPMulticast implements Runnable {
         }
     }
 
-    public boolean writeString(String string) {
+    public boolean writeString(String string) throws ErrnoException {
         return writeBytes(string.getBytes());
     }
 

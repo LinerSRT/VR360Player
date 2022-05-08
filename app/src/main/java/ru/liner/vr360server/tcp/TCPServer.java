@@ -136,12 +136,11 @@ public class TCPServer {
                     clientSocketList.remove(socket);
                     handler.post(() -> callback.onDisconnected(socket));
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
                 if (clientSocketList != null) {
                     clientSocketList.remove(socket);
                     handler.post(() -> callback.onDisconnected(socket));
                 }
-                e.printStackTrace();
             }
         }
     }

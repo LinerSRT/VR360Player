@@ -19,6 +19,7 @@
         android:drawablePadding="4dp"
         android:gravity="center"
         android:text="192.160.0.1"
+        android:textStyle="bold|italic"
         android:textColor="@color/textColor"
         android:textSize="@dimen/textSize"
         app:layout_constraintStart_toStartOf="parent"
@@ -75,12 +76,15 @@
         app:layout_constraintTop_toTopOf="@+id/clientProgressBar"
         android:text="123/1234 kb" />
 
-    <ImageButton
+    <TextView
         android:id="@+id/clientDisconnect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/circle"
-        android:src="@drawable/ic_baseline_close_24"
+        android:text="Disconnect"
+        android:textColor="@color/primaryColor"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

@@ -23,10 +23,12 @@ public interface IServer {
     void sendToSocket(Socket socket, String command);
     List<Socket> getSocketList();
     boolean isConnected(Socket socket);
+    void disconnect(Socket socket);
     int getSocketIndex(Socket socket);
     boolean hasConnectedSockets();
     void showNotification(String title, String message, @ColorRes int backgroundColor);
     void dismissNotification();
     String serialize(Object object);
     void send(ConnectedClient client, Object object);
+    void send(ConnectedClient client, String command);
 }

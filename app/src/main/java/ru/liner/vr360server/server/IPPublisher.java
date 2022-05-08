@@ -1,6 +1,8 @@
 package ru.liner.vr360server.server;
 
 
+import android.system.ErrnoException;
+
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -48,7 +50,10 @@ public class IPPublisher extends Thread {
         while (!isInterrupted() && udpMulticast != null) {
             String localhost = Networks.getLocalIpAddress();
             if(localhost != null){
-                udpMulticast.writeString(localhost);
+                try {
+                    udpMulticast.writeString(localhost);
+                    Utils.sleep(1000);
+                } catch (ErrnoException ignored){}
             }
         }
     }

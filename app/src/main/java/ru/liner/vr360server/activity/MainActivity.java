@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import com.skydoves.androidbottombar.AndroidBottomBarView;
 import com.skydoves.androidbottombar.BottomMenuItem;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -278,6 +279,11 @@ public class MainActivity extends CoreActivity implements IServer {
     }
 
     @Override
+    public void send(ConnectedClient client, String command) {
+        sendToSocket(client.getSocket(), command);
+    }
+
+    @Override
     public boolean isConnected(Socket socket) {
         if (socketList.isEmpty())
             return false;
@@ -288,6 +294,15 @@ public class MainActivity extends CoreActivity implements IServer {
     }
 
     @Override
+    public void disconnect(Socket socket) {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public int getSocketIndex(Socket socket) {
         for (int i = 0; i < socketList.size(); i++) {
             Socket s = socketList.get(i);
@@ -295,5 +310,11 @@ public class MainActivity extends CoreActivity implements IServer {
                 return i;
         }
         return -1;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopServer();
     }
 }
