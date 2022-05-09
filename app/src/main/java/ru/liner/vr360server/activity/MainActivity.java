@@ -31,8 +31,8 @@ import ru.liner.vr360server.R;
 import ru.liner.vr360server.fragments.DevicesFragment;
 import ru.liner.vr360server.fragments.SettingsFragment;
 import ru.liner.vr360server.fragments.VideosFragment;
+import ru.liner.vr360server.server.FileServer;
 import ru.liner.vr360server.server.IPPublisher;
-import ru.liner.vr360server.server.MediaStreamingServer;
 import ru.liner.vr360server.server.Video;
 import ru.liner.vr360server.tcp.TCPServer;
 import ru.liner.vr360server.utils.Comparator;
@@ -54,7 +54,7 @@ public class MainActivity extends CoreActivity implements IServer {
     private ExtendedViewPager viewPager;
     private List<Socket> socketList;
     public static TCPServer tcpServer;
-    private MediaStreamingServer mediaStreamingServer;
+    private FileServer mediaStreamingServer;
     private IPPublisher ipPublisher;
     private List<IDataReceiver> dataReceiverList;
     private List<Video> videoList;
@@ -200,8 +200,9 @@ public class MainActivity extends CoreActivity implements IServer {
 
     @Override
     public void startMediaServer(Video video) {
+        stopMediaServer();
         try {
-            mediaStreamingServer = new MediaStreamingServer(video.path, Constant.SERVER_STREAM_VIDEO_PORT);
+            mediaStreamingServer = new FileServer(Constant.SERVER_STREAM_VIDEO_PORT, new File(video.path));
             mediaStreamingServer.start();
         } catch (IOException ignored) {
         }
@@ -342,37 +343,55 @@ public class MainActivity extends CoreActivity implements IServer {
 
     @Override
     public void startSyncSession(Socket socket, @NonNull String hash) {
-
+        sendData(socket, "stopSyncSession@" + hash);
     }
 
     @Override
     public void startSyncSession(Socket socket, List<String> hashList) {
-
+        for (String hash : hashList)
+            sendData(socket, "stopSyncSession@" + hash);
     }
 
     @Override
     public void stopSyncSession(Socket socket) {
+        sendData(socket, "stopSyncSession@all");
+    }
 
+    @Override
+    public void stopSyncSession() {
+        sendData("stopSyncSession@all");
     }
 
     @Override
     public void requestSync(Socket socket, @NonNull Video video) {
+        sendData(socket, String.format("requestSync@%s@%s", "http://" + getHost() + ":" + Constant.SERVER_STREAM_VIDEO_PORT, new Gson().toJson(video)));
+    }
 
+    @Override
+    public void requestSync(@NonNull Video video) {
+        sendData(String.format("requestSync@%s@%s", "http://" + getHost() + ":" + Constant.SERVER_STREAM_VIDEO_PORT, new Gson().toJson(video)));
     }
 
     @Override
     public void requestSync(Socket socket, List<Video> videoList) {
+        for (Video video : videoList)
+            requestSync(socket, video);
+    }
 
+    @Override
+    public void requestSync(List<Video> videoList) {
+        for (Video video : videoList)
+            requestSync(video);
     }
 
     @Override
     public void requestSyncStatus(Socket socket, @NonNull String hash) {
-
+        sendData(socket, "requestSyncStatus@" + hash);
     }
 
     private void collectVideos() {
         allVideosRetrieved = false;
-        if(videoList == null)
+        if (videoList == null)
             videoList = new ArrayList<>();
         videoList.clear();
         List<File> files = Files.getAllVideos(this, new File(Environment.getExternalStorageDirectory(), "VRVideos"));
@@ -404,45 +423,6 @@ public class MainActivity extends CoreActivity implements IServer {
         return allVideosRetrieved;
     }
 
-    //
-//    @Override
-//    public void showNotification(String title, String message, @ColorRes int backgroundColor) {
-//        runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-//                notificationProgress.setVisibility(View.GONE);
-//                notificationTitle.setText(title);
-//                notificationText.setText(message);
-//                notificationLayout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, backgroundColor)));
-//                ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
-//                if (!notificationLayout.isExpanded())
-//                    notificationLayout.expand();
-//            }
-//        });
-//    }
-//
-//    @Override
-//    public void showNotification(String title, String message, int backgroundColor, boolean indeterminate, int progress) {
-//        runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-//                notificationProgress.setVisibility(View.VISIBLE);
-//                updateProgress(indeterminate, progress);
-//                notificationTitle.setText(title);
-//                notificationText.setText(message);
-//                notificationLayout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, backgroundColor)));
-//                ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
-//                if (!notificationLayout.isExpanded())
-//                    notificationLayout.expand();
-//            }
-//        });
-//    }
-//
-//    @Override
-//    public void updateProgress(boolean indeterminate, int progress) {
-//        notificationProgress.setIndeterminate(indeterminate);
-//        notificationProgress.setProgress(progress);
-//    }
 
     @Override
     protected void onDestroy() {

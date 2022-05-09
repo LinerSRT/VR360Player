@@ -46,8 +46,11 @@ public interface IServer {
     void startSyncSession(Socket socket, @NonNull String hash);
     void startSyncSession(Socket socket, List<String> hashList);
     void stopSyncSession(Socket socket);
+    void stopSyncSession();
     void requestSync(Socket socket, @NonNull Video video);
+    void requestSync(@NonNull Video video);
     void requestSync(Socket socket, List<Video> videoList);
+    void requestSync(List<Video> videoList);
     void requestSyncStatus(Socket socket, @NonNull String hash);
 
 

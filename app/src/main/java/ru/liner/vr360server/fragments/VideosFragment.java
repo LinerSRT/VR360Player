@@ -1,6 +1,7 @@
 package ru.liner.vr360server.fragments;
 
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -8,11 +9,18 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+
+import java.net.Socket;
+
 import ru.liner.vr360server.R;
 import ru.liner.vr360server.activity.IServer;
 import ru.liner.vr360server.activity.MainActivity;
 import ru.liner.vr360server.recycler.adapter.VideoAdapter;
 import ru.liner.vr360server.server.Video;
+import ru.liner.vr360server.utils.Comparator;
+import ru.liner.vr360server.utils.Constant;
+import ru.liner.vr360server.utils.Lists;
 import ru.liner.vr360server.utils.Utils;
 import ru.liner.vr360server.utils.ViewUtils;
 import ru.liner.vr360server.views.ExtraPaddingLinearLayoutManager;
@@ -53,12 +61,9 @@ public class VideosFragment extends BaseFragment {
     @Override
     public void onFragmentCreated() {
         videoAdapter = new VideoAdapter(server);
-        videoAdapter.setCallback(new VideoAdapter.Callback() {
-            @Override
-            public void onSelected(Video video) {
-                VideosFragment.this.video = video;
-                syncAndPlayButton.setEnabled(true);
-            }
+        videoAdapter.setCallback(video -> {
+            VideosFragment.this.video = video;
+            syncAndPlayButton.disableButton(false);
         });
         videoRecycler.setLayoutManager(new ExtraPaddingLinearLayoutManager(getContext(), 0, ViewUtils.dpToPx(48)));
         videoRecycler.setAdapter(videoAdapter);
@@ -68,15 +73,13 @@ public class VideosFragment extends BaseFragment {
             public void onStateChanged(SwipeButton swipeButton, boolean enabled, boolean fromUser) {
                 if (enabled) {
                     if (fromUser) {
-//                        if (!server.isServerRunning() || !server.hasConnectedClients()) {
-//                            swipeButton.disableButton(false);
-//                            server.showNotification("Server not started!", "Start server and connect at least one client to start stream", R.color.red);
-//                        } else {
-//                            if (video != null) {
-//                                server.startMediaServer(video);
-//                                server.send(String.format("download_video@%s@%s", "http://" + server.getHost() + ":" + Constant.SERVER_STREAM_VIDEO_PORT, new Gson().toJson(video)));
-//                            }
-//                        }
+                        server.stopSyncSession();
+                        server.stopMediaServer();
+                        server.startMediaServer(video);
+                        server.requestSync(video);
+                    } else {
+                        server.stopSyncSession();
+                        server.stopMediaServer();
                     }
                     syncAndPlayButton.setButtonBackground(ContextCompat.getDrawable(getContext(), R.drawable.shape_rounded_red));
                 } else {
@@ -91,11 +94,61 @@ public class VideosFragment extends BaseFragment {
                 server.runOnUI(() -> {
                     loadingVideosProgress.setVisibility(View.GONE);
                     videoAdapter.add(video);
+                });
+            server.runOnUI(() -> {
+                if(videoAdapter.getItemCount() != 0) {
+                    Video video = videoAdapter.getVideoList().get(0);
+                    VideosFragment.this.video = video;
+                    video.selected = true;
+                    videoAdapter.update(video);
+                    syncAndPlayButton.setEnabled(server.isTCPServerRunning() || server.hasConnectedClients());
                     videoRecyclerEmpty.setVisibility(videoAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
                     videosFolder.setVisibility(videoAdapter.getItemCount() != 0 ? View.VISIBLE : View.GONE);
-                });
+                    syncAndPlayButton.animate()
+                            .setStartDelay(300)
+                            .translationY(0)
+                            .setDuration(300)
+                            .setInterpolator(new DecelerateInterpolator())
+                            .start();
+                }
+            });
         });
-        //server.showNotification("Loading videos", "Loading video information from device", R.color.backgroundSecondaryColor, false, 0);
+    }
+
+    @Override
+    public void onClientConnected(Socket socket) {
+        super.onClientConnected(socket);
+        server.runOnUI(() -> {
+            if(videoAdapter.getItemCount() != 0) {
+                syncAndPlayButton.setEnabled(server.isTCPServerRunning() || server.hasConnectedClients());
+                videoRecyclerEmpty.setVisibility(videoAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
+                videosFolder.setVisibility(videoAdapter.getItemCount() != 0 ? View.VISIBLE : View.GONE);
+                syncAndPlayButton.animate()
+                        .setStartDelay(300)
+                        .translationY(0)
+                        .setDuration(300)
+                        .setInterpolator(new DecelerateInterpolator())
+                        .start();
+            }
+        });
+    }
+
+    @Override
+    public void onClientDisconnected(Socket socket) {
+        super.onClientDisconnected(socket);
+        server.runOnUI(() -> {
+            if(videoAdapter.getItemCount() != 0) {
+                syncAndPlayButton.setEnabled(server.isTCPServerRunning() || server.hasConnectedClients());
+                videoRecyclerEmpty.setVisibility(videoAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
+                videosFolder.setVisibility(videoAdapter.getItemCount() != 0 ? View.VISIBLE : View.GONE);
+                syncAndPlayButton.animate()
+                        .setStartDelay(300)
+                        .translationY(0)
+                        .setDuration(300)
+                        .setInterpolator(new DecelerateInterpolator())
+                        .start();
+            }
+        });
     }
 
     @Override

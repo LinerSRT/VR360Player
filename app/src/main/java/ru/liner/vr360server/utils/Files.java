@@ -17,6 +17,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -164,6 +165,18 @@ public class Files {
         } catch (IOException e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public static byte[] readFileToBytes(@NonNull File file) {
+        try {
+            RandomAccessFile randomAccessFile =  new RandomAccessFile(file, "r");
+            byte[] bytes = new byte[(int)randomAccessFile.length()];
+            randomAccessFile.readFully(bytes);
+            return bytes;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new byte[0];
         }
     }
 

@@ -45,6 +45,14 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
         videoList.add(video);
         notifyItemInserted(videoList.size() - 1);
     }
+    public void update(Video video) {
+        videoList.set(videoList.lastIndexOf(video), video);
+        notifyItemInserted(videoList.lastIndexOf(video));
+    }
+
+    public List<Video> getVideoList() {
+        return videoList;
+    }
 
     @NonNull
     @Override
