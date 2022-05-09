@@ -3,6 +3,8 @@ package ru.liner.vr360server.activity;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.CallSuper;
@@ -35,15 +37,23 @@ import ru.liner.vr360server.views.ExtendedViewPager;
 
 
 public class MainActivity extends CoreActivity implements IServer {
+    private static IServer server;
     private AndroidBottomBarView bottomNavigation;
     private ExtendedViewPager viewPager;
     private ExpandLayout notificationLayout;
     private TextView notificationTitle;
     private TextView notificationText;
+    private ProgressBar notificationProgress;
     private List<Socket> socketList;
     public static TCPServer tcpServer;
     private IPPublisher ipPublisher;
     private List<IDataReceiver> dataReceiverList;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        server = this;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -54,6 +64,7 @@ public class MainActivity extends CoreActivity implements IServer {
         notificationLayout = findViewById(R.id.notificationLayout);
         notificationTitle = findViewById(R.id.notificationTitle);
         notificationText = findViewById(R.id.notificationText);
+        notificationProgress = findViewById(R.id.notificationProgress);
         bottomNavigation = findViewById(R.id.bottomNavigation);
         viewPager = findViewById(R.id.viewPager);
         socketList = new ArrayList<>();
@@ -215,6 +226,7 @@ public class MainActivity extends CoreActivity implements IServer {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                notificationProgress.setVisibility(View.GONE);
                 if(notificationLayout.isExpanded()) {
                     notificationLayout.setOnExpandCallback(new ExpandLayout.OnExpandCallback() {
                         @Override
@@ -242,6 +254,48 @@ public class MainActivity extends CoreActivity implements IServer {
                 }
             }
         });
+    }
+
+    @Override
+    public void showNotification(String title, String message, int backgroundColor, boolean indeterminate, int progress) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                notificationProgress.setVisibility(View.VISIBLE);
+                updateProgress(indeterminate, progress);
+                if(notificationLayout.isExpanded()) {
+                    notificationLayout.setOnExpandCallback(new ExpandLayout.OnExpandCallback() {
+                        @Override
+                        public void onExpanded(ExpandLayout expandLayout) {
+
+                        }
+
+                        @Override
+                        public void onCollapsed(ExpandLayout expandLayout) {
+                            ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, R.color.backgroundColor));
+                            notificationTitle.setText(title);
+                            notificationText.setText(message);
+                            notificationLayout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, backgroundColor)));
+                            ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
+                            notificationLayout.expand();
+                        }
+                    });
+                    notificationLayout.collapse();
+                } else {
+                    notificationTitle.setText(title);
+                    notificationText.setText(message);
+                    notificationLayout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, backgroundColor)));
+                    ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
+                    notificationLayout.expand();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void updateProgress(boolean indeterminate, int progress) {
+        notificationProgress.setIndeterminate(indeterminate);
+        notificationProgress.setProgress(progress);
     }
 
     @Override
@@ -316,5 +370,9 @@ public class MainActivity extends CoreActivity implements IServer {
     protected void onDestroy() {
         super.onDestroy();
         stopServer();
+    }
+
+    public static IServer getServer(){
+        return server;
     }
 }

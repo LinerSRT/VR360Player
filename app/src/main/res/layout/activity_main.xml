@@ -38,6 +38,16 @@
                tools:text="Descrition text"
                android:textSize="@dimen/textSecondarySize"
                android:textColor="@color/textSecondaryColor"/>
+
+           <ProgressBar
+               android:id="@+id/notificationProgress"
+               style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+               android:layout_width="match_parent"
+               android:layout_height="wrap_content"
+               android:layout_marginTop="8dp"
+               android:layout_marginEnd="8dp"
+               android:progress="50"
+               android:progressDrawable="@drawable/progressbar_track" />
        </LinearLayout>
     </ru.liner.vr360server.views.ExpandLayout>
 

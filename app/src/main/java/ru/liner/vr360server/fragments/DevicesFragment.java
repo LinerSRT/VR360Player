@@ -13,6 +13,7 @@ import java.net.Socket;
 
 import ru.liner.vr360server.R;
 import ru.liner.vr360server.activity.IServer;
+import ru.liner.vr360server.activity.MainActivity;
 import ru.liner.vr360server.recycler.adapter.ClientAdapter;
 import ru.liner.vr360server.server.Client;
 import ru.liner.vr360server.views.SwipeButton;
@@ -26,19 +27,20 @@ public class DevicesFragment extends BaseFragment {
     private ClientAdapter clientAdapter;
     private RecyclerView socketRecycler;
     private SwipeButton startServerButton;
-    private SwipeButton startPlayButton;
     private TextView socketRecyclerEmpty;
 
     public DevicesFragment(IServer server) {
         super(server);
     }
 
+    public DevicesFragment() {
+        this.server = MainActivity.getServer();
+    }
 
     @Override
     public void declareViews(View view) {
         socketRecycler = find(R.id.socketRecycler);
         startServerButton = find(R.id.startServerButton);
-        startPlayButton = find(R.id.startPlayButton);
         socketRecyclerEmpty = find(R.id.socketRecyclerEmpty);
     }
 
@@ -47,26 +49,15 @@ public class DevicesFragment extends BaseFragment {
         clientAdapter = new ClientAdapter(server);
         socketRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         socketRecycler.setAdapter(clientAdapter);
-        startPlayButton.setStateCallback((swipeButton, enabled, fromUser) -> {
-            if (enabled) {
-                startPlayButton.setButtonBackground(ContextCompat.getDrawable(getContext(), R.drawable.shape_rounded_red));
-            } else {
-                startPlayButton.setButtonBackground(ContextCompat.getDrawable(getContext(), R.drawable.shape_rounded_green));
-            }
-        });
-        startPlayButton.setEnabled(false);
         startServerButton.setStateCallback((swipeButton, enabled, fromUser) -> {
             if (enabled) {
                 startServerButton.setButtonBackground(ContextCompat.getDrawable(getContext(), R.drawable.shape_rounded_red));
                 server.showNotification("Server started!", "Waiting for client connection", R.color.primaryColor);
-                startPlayButton.setEnabled(true);
                 server.startServer();
 
             } else {
-                startPlayButton.disableButton(false);
                 startServerButton.setButtonBackground(ContextCompat.getDrawable(getContext(), R.drawable.shape_rounded_primary));
                 server.showNotification("Server stopped!", "All connections has been closed", R.color.red);
-                startPlayButton.setEnabled(false);
                 server.stopServer();
             }
         });

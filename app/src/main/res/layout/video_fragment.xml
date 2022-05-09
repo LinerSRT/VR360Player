@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/swipeButton"
+        app:layout_constraintBottom_toTopOf="@+id/syncAndPlayButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -33,7 +33,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ru.liner.vr360server.views.SwipeButton
-        android:id="@+id/swipeButton"
+        android:id="@+id/syncAndPlayButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
@@ -51,7 +51,7 @@
         app:button_top_padding="8dp"
         app:has_activate_state="true"
         app:initial_state="disabled"
-        app:inner_text="Swipe to sync selected videos"
+        app:inner_text="Swipe to sync and play"
         app:inner_text_background="@drawable/shape_rounded_background"
         app:inner_text_bottom_padding="12dp"
         app:inner_text_color="@android:color/white"

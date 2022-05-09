@@ -4,6 +4,7 @@ import android.view.View;
 
 import ru.liner.vr360server.R;
 import ru.liner.vr360server.activity.IServer;
+import ru.liner.vr360server.activity.MainActivity;
 
 /**
  * @author : "Line'R"
@@ -13,6 +14,10 @@ import ru.liner.vr360server.activity.IServer;
 public class SettingsFragment extends BaseFragment{
     public SettingsFragment(IServer server) {
         super(server);
+    }
+
+    public SettingsFragment() {
+        this.server = MainActivity.getServer();
     }
 
     @Override

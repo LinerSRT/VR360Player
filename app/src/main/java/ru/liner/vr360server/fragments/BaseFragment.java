@@ -19,6 +19,7 @@ import java.net.Socket;
 import ru.liner.vr360server.Core;
 import ru.liner.vr360server.activity.IDataReceiver;
 import ru.liner.vr360server.activity.IServer;
+import ru.liner.vr360server.activity.MainActivity;
 
 /**
  * @author : "Line'R"
@@ -32,6 +33,10 @@ public abstract class BaseFragment extends Fragment implements IDataReceiver {
 
     public BaseFragment(IServer server) {
         this.server = server;
+    }
+
+    public BaseFragment() {
+        this.server = MainActivity.getServer();
     }
 
     @CallSuper

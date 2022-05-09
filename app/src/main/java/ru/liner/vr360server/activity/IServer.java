@@ -24,6 +24,8 @@ public interface IServer {
     int getSocketIndex(Socket socket);
     boolean hasConnectedSockets();
     void showNotification(String title, String message, @ColorRes int backgroundColor);
+    void showNotification(String title, String message, @ColorRes int backgroundColor, boolean indeterminate, int progress);
+    void updateProgress(boolean indeterminate, int progress);
     void dismissNotification();
     String serialize(Object object);
     void send(Client client, Object object);

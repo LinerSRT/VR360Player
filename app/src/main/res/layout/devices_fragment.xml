@@ -57,33 +57,4 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <ru.liner.vr360server.views.SwipeButton
-        android:id="@+id/startPlayButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:elevation="1dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="8dp"
-        app:button_background="@drawable/shape_rounded_green"
-        app:button_bottom_padding="8dp"
-        app:button_image_disabled="@drawable/ic_baseline_play_arrow_24"
-        app:button_image_enabled="@drawable/ic_baseline_stop_24"
-        app:button_image_height="48dp"
-        app:button_image_width="48dp"
-        app:button_left_padding="8dp"
-        app:button_right_padding="8dp"
-        app:button_top_padding="8dp"
-        app:has_activate_state="true"
-        app:initial_state="disabled"
-        app:inner_text="Swipe to start play"
-        app:inner_text_background="@drawable/shape_rounded_background"
-        app:inner_text_bottom_padding="12dp"
-        app:inner_text_color="@android:color/white"
-        app:inner_text_size="@dimen/textSecondarySize"
-        app:inner_text_top_padding="12dp"
-        app:layout_constraintBottom_toTopOf="@+id/startServerButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

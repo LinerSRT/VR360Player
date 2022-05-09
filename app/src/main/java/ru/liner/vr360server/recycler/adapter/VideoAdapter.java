@@ -30,6 +30,7 @@ import ru.liner.vr360server.views.RoundedImageView;
 public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> {
     private final IServer server;
     private final List<Video> videoList;
+    private Callback callback;
 
     public VideoAdapter(IServer server) {
         this.server = server;
@@ -57,8 +58,13 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
         holder.videoSelection.setVisibility(video.selected ? View.VISIBLE : View.GONE);
         holder.videoThumb.setImageBitmap(video.thumb);
         holder.videoLayout.setOnClickListener(v -> {
+            for(Video localVideo:videoList){
+                localVideo.selected = false;
+            }
             video.selected = !video.selected;
-            notifyItemChanged(position);
+            notifyDataSetChanged();
+            if(callback != null)
+                callback.onSelected(video);
         });
     }
 
@@ -86,5 +92,13 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
             videoThumb = itemView.findViewById(R.id.videoThumb);
             videoSelection = itemView.findViewById(R.id.videoSelection);
         }
+    }
+
+    public interface Callback{
+        void onSelected(Video video);
+    }
+
+    public void setCallback(Callback callback) {
+        this.callback = callback;
     }
 }
