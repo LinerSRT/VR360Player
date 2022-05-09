@@ -1,14 +1,11 @@
 package ru.liner.vr360server.activity;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
 
 import java.net.Socket;
 import java.util.List;
 
-import ru.liner.vr360server.recycler.model.ConnectedDevice;
-import ru.liner.vr360server.server.ConnectedClient;
-import ru.liner.vr360server.utils.VideoFile;
+import ru.liner.vr360server.server.Client;
 
 public interface IServer {
     void register(IDataReceiver dataReceiver);
@@ -29,6 +26,6 @@ public interface IServer {
     void showNotification(String title, String message, @ColorRes int backgroundColor);
     void dismissNotification();
     String serialize(Object object);
-    void send(ConnectedClient client, Object object);
-    void send(ConnectedClient client, String command);
+    void send(Client client, Object object);
+    void send(Client client, String command);
 }

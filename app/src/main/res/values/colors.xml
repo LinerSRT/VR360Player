@@ -2,11 +2,12 @@
 <resources>
     <color name="backgroundColor">#18181C</color>
     <color name="backgroundSecondaryColor">#222325</color>
+    <color name="backgroundSecondaryColorTransparent">#77222325</color>
     <color name="primaryColor">#01579B</color>
     <color name="primarySecondaryColor">#0D47A1</color>
     <color name="textColor">#F4F4F4</color>
-    <color name="textSecondaryColor">#D8D8D8</color>
-    <color name="textDisabledColor">#979797</color>
+    <color name="textSecondaryColor">#BFBFBF</color>
+    <color name="textDisabledColor">#6C6B6B</color>
     <color name="white">#FFFFFFFF</color>
     <color name="red">#D50000</color>
     <color name="green">#2E7D32</color>

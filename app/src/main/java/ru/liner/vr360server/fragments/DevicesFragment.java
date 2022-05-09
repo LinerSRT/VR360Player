@@ -10,16 +10,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.gson.Gson;
 
 import java.net.Socket;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import ru.liner.vr360server.R;
 import ru.liner.vr360server.activity.IServer;
 import ru.liner.vr360server.recycler.adapter.ClientAdapter;
-import ru.liner.vr360server.server.ClientStatus;
-import ru.liner.vr360server.server.ConnectedClient;
-import ru.liner.vr360server.server.DownloadingStatus;
-import ru.liner.vr360server.server.PlayingStatus;
+import ru.liner.vr360server.server.Client;
 import ru.liner.vr360server.views.SwipeButton;
 
 /**
@@ -73,7 +68,6 @@ public class DevicesFragment extends BaseFragment {
                 server.showNotification("Server stopped!", "All connections has been closed", R.color.red);
                 startPlayButton.setEnabled(false);
                 server.stopServer();
-
             }
         });
     }
@@ -97,50 +91,19 @@ public class DevicesFragment extends BaseFragment {
         socketRecyclerEmpty.setVisibility(clientAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
     }
 
-    private void onClientStatusChanged(Socket socket, ClientStatus clientStatus){
-        ConnectedClient client = clientAdapter.get(socket);
-        if(client != null){
-            client.clientStatus = clientStatus;
-            clientAdapter.update(client);
-        }
+    private void onClientChanged(Socket socket, Client client) {
+        client.socket = socket;
+        clientAdapter.update(client);
     }
-
-    private void onDownloadingStatusChanged(Socket socket, DownloadingStatus downloadingStatus){
-        ConnectedClient client = clientAdapter.get(socket);
-        if(client != null){
-            client.downloadingStatus = downloadingStatus;
-            clientAdapter.update(client);
-        }
-    }
-
-    private void onPlayingStatusChanged(Socket socket, PlayingStatus playingStatus){
-        ConnectedClient client = clientAdapter.get(socket);
-        if(client != null){
-            client.playingStatus = playingStatus;
-            clientAdapter.update(client);
-        }
-    }
-
 
 
     @Override
     public void onReceived(Socket socket, String command) {
         super.onReceived(socket, command);
-        if(command.contains("@")){
+        if (command.contains("@")) {
             String[] data = command.split("@");
-            if(data.length == 2){
-                switch (data[0]){
-                    case "ClientStatus":
-                        onClientStatusChanged(socket, new Gson().fromJson(data[1], ClientStatus.class));
-                        break;
-                    case "DownloadingStatus":
-                        onDownloadingStatusChanged(socket, new Gson().fromJson(data[1], DownloadingStatus.class));
-                        break;
-                    case "PlayingStatus":
-                        onPlayingStatusChanged(socket, new Gson().fromJson(data[1], PlayingStatus.class));
-                        break;
-                }
-            }
+            if (data.length == 2 && data[0].equals("Client"))
+                onClientChanged(socket, new Gson().fromJson(data[1], Client.class));
         }
     }
 

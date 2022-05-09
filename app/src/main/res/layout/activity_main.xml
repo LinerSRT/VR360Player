@@ -12,7 +12,9 @@
         android:id="@+id/notificationLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:el_expanded="true"
         android:padding="16dp"
+        android:background="@drawable/background_round_bottom"
         app:el_duration="300"
         android:elevation="8dp"
         android:orientation="vertical">
@@ -49,7 +51,7 @@
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:id="@+id/bottomNavigation"
-        android:background="@color/backgroundSecondaryColor"
+        android:background="@drawable/background_round_top"
         app:bottomBar_duration="300"
         android:elevation="8dp"
         app:bottomBar_flavor="icon"

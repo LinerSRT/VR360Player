@@ -1,8 +1,8 @@
 package ru.liner.vr360server.activity;
 
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.util.Log;
 import android.widget.TextView;
 
 import androidx.annotation.CallSuper;
@@ -23,7 +23,7 @@ import ru.liner.vr360server.R;
 import ru.liner.vr360server.fragments.DevicesFragment;
 import ru.liner.vr360server.fragments.SettingsFragment;
 import ru.liner.vr360server.fragments.VideosFragment;
-import ru.liner.vr360server.server.ConnectedClient;
+import ru.liner.vr360server.server.Client;
 import ru.liner.vr360server.server.IPPublisher;
 import ru.liner.vr360server.tcp.TCPServer;
 import ru.liner.vr360server.utils.Constant;
@@ -74,7 +74,7 @@ public class MainActivity extends CoreActivity implements IServer {
                 .build());
         bottomMenuItems.add(new BottomMenuItem(this)
                 .setTitle("Videos")
-                .setIcon(R.drawable.ic_baseline_folder_24)
+                .setIcon(R.drawable.ic_baseline_video_library_24)
                 .setIconSize(24)
                 .build());
         bottomMenuItems.add(new BottomMenuItem(this)
@@ -88,6 +88,7 @@ public class MainActivity extends CoreActivity implements IServer {
             viewPager.setCurrentItem(0);
         });
         bottomNavigation.setOnMenuItemSelectedListener((i, bottomMenuItem, b) -> viewPager.setCurrentItem(i));
+        showNotification("Server is ready", "Server application ready to work", R.color.backgroundSecondaryColor);
     }
 
     @Override
@@ -226,8 +227,7 @@ public class MainActivity extends CoreActivity implements IServer {
                             ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, R.color.backgroundColor));
                             notificationTitle.setText(title);
                             notificationText.setText(message);
-                            notificationLayout.setBackgroundColor(ContextCompat.getColor(MainActivity.this, backgroundColor));
-
+                            notificationLayout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, backgroundColor)));
                             ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
                             notificationLayout.expand();
                         }
@@ -236,7 +236,7 @@ public class MainActivity extends CoreActivity implements IServer {
                 } else {
                     notificationTitle.setText(title);
                     notificationText.setText(message);
-                    notificationLayout.setBackgroundColor(ContextCompat.getColor(MainActivity.this, backgroundColor));
+                    notificationLayout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, backgroundColor)));
                     ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
                     notificationLayout.expand();
                 }
@@ -274,13 +274,13 @@ public class MainActivity extends CoreActivity implements IServer {
     }
 
     @Override
-    public void send(ConnectedClient client, Object object) {
-        sendToSocket(client.getSocket(), serialize(object));
+    public void send(Client client, Object object) {
+        sendToSocket(client.socket, serialize(object));
     }
 
     @Override
-    public void send(ConnectedClient client, String command) {
-        sendToSocket(client.getSocket(), command);
+    public void send(Client client, String command) {
+        sendToSocket(client.socket, command);
     }
 
     @Override
