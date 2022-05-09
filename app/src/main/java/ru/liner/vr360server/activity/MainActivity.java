@@ -1,38 +1,50 @@
 package ru.liner.vr360server.activity;
 
-import android.content.res.ColorStateList;
+import static ru.liner.vr360server.utils.Constant.PERMISSION_REQUEST_CORE;
+
+import android.content.Intent;
+import android.media.MediaMetadataRetriever;
+import android.media.ThumbnailUtils;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.StrictMode;
-import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.provider.MediaStore;
 
 import androidx.annotation.CallSuper;
-import androidx.annotation.ColorRes;
-import androidx.core.content.ContextCompat;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.skydoves.androidbottombar.AndroidBottomBarView;
 import com.skydoves.androidbottombar.BottomMenuItem;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
+import dalvik.system.DexFile;
 import ru.liner.vr360server.CoreActivity;
 import ru.liner.vr360server.R;
 import ru.liner.vr360server.fragments.DevicesFragment;
 import ru.liner.vr360server.fragments.SettingsFragment;
 import ru.liner.vr360server.fragments.VideosFragment;
-import ru.liner.vr360server.server.Client;
 import ru.liner.vr360server.server.IPPublisher;
+import ru.liner.vr360server.server.MediaStreamingServer;
+import ru.liner.vr360server.server.Video;
 import ru.liner.vr360server.tcp.TCPServer;
+import ru.liner.vr360server.utils.Comparator;
 import ru.liner.vr360server.utils.Constant;
+import ru.liner.vr360server.utils.Files;
 import ru.liner.vr360server.utils.FragmentAdapter;
-import ru.liner.vr360server.utils.ViewUtils;
+import ru.liner.vr360server.utils.Lists;
+import ru.liner.vr360server.utils.Networks;
+import ru.liner.vr360server.utils.Utils;
+import ru.liner.vr360server.utils.hashing.Hash;
+import ru.liner.vr360server.utils.hashing.HashAlgorithm;
 import ru.liner.vr360server.utils.pagetransformer.ParallaxTransformer;
-import ru.liner.vr360server.views.ExpandLayout;
 import ru.liner.vr360server.views.ExtendedViewPager;
 
 
@@ -40,14 +52,13 @@ public class MainActivity extends CoreActivity implements IServer {
     private static IServer server;
     private AndroidBottomBarView bottomNavigation;
     private ExtendedViewPager viewPager;
-    private ExpandLayout notificationLayout;
-    private TextView notificationTitle;
-    private TextView notificationText;
-    private ProgressBar notificationProgress;
     private List<Socket> socketList;
     public static TCPServer tcpServer;
+    private MediaStreamingServer mediaStreamingServer;
     private IPPublisher ipPublisher;
     private List<IDataReceiver> dataReceiverList;
+    private List<Video> videoList;
+    private boolean allVideosRetrieved;
 
     @Override
     protected void onStart() {
@@ -61,10 +72,9 @@ public class MainActivity extends CoreActivity implements IServer {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         setContentView(R.layout.activity_main);
-        notificationLayout = findViewById(R.id.notificationLayout);
-        notificationTitle = findViewById(R.id.notificationTitle);
-        notificationText = findViewById(R.id.notificationText);
-        notificationProgress = findViewById(R.id.notificationProgress);
+        Utils.requestPermissions(this);
+        if (Utils.isPermissionGranted(this))
+            runBackground(this::collectVideos);
         bottomNavigation = findViewById(R.id.bottomNavigation);
         viewPager = findViewById(R.id.viewPager);
         socketList = new ArrayList<>();
@@ -99,55 +109,70 @@ public class MainActivity extends CoreActivity implements IServer {
             viewPager.setCurrentItem(0);
         });
         bottomNavigation.setOnMenuItemSelectedListener((i, bottomMenuItem, b) -> viewPager.setCurrentItem(i));
-        showNotification("Server is ready", "Server application ready to work", R.color.backgroundSecondaryColor);
+    }
+
+    @CallSuper
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PERMISSION_REQUEST_CORE && Utils.isPermissionGranted(this))
+            runBackground(this::collectVideos);
     }
 
     @Override
-    public void register(IDataReceiver dataReceiver) {
-        if(!dataReceiverList.contains(dataReceiver))
-        dataReceiverList.add(dataReceiver);
+    public void runBackground(Runnable runnable) {
+        new Thread(runnable).start();
     }
 
     @Override
-    public void unregister(IDataReceiver dataReceiver) {
+    public void runOnUI(Runnable runnable) {
+        runOnUiThread(runnable);
+    }
+
+    @Override
+    public void registerDataReceiver(IDataReceiver dataReceiver) {
+        if (!dataReceiverList.contains(dataReceiver))
+            dataReceiverList.add(dataReceiver);
+    }
+
+    @Override
+    public void unregisterDataReceiver(IDataReceiver dataReceiver) {
         dataReceiverList.remove(dataReceiver);
     }
 
     @Override
-    public void startServer() {
+    public void startTCPServer() {
+        if (isTCPServerRunning())
+            return;
         if (tcpServer == null)
             tcpServer = new TCPServer(Constant.SERVER_TCP_CONNECTION_PORT);
         tcpServer.start(new TCPServer.Callback() {
             @Override
             public void onStarted(TCPServer tcpServer) {
-                TCPServer.Callback.super.onStarted(tcpServer);
                 if (ipPublisher == null)
                     ipPublisher = new IPPublisher();
                 ipPublisher.start();
             }
 
             @Override
+            public boolean acceptConnection(Socket socket) {
+                return !isClientConnected(socket);
+            }
+
+            @Override
             public void onConnected(Socket socket) {
-                TCPServer.Callback.super.onConnected(socket);
-                if (!isConnected(socket)) {
-                    socketList.add(socket);
-                    runOnUiThread(() -> onSocketConnected(socket, socketList.size() - 1));
-                }
+                socketList.add(socket);
+                runOnUI(() -> onClientConnected(socket));
             }
 
             @Override
             public void onDisconnected(Socket socket) {
-                TCPServer.Callback.super.onDisconnected(socket);
-                int index = getSocketIndex(socket);
-                if (index != -1) {
-                    socketList.remove(index);
-                    runOnUiThread(() -> onSocketDisconnected(socket, index));
-                }
+                socketList.remove(socket);
+                runOnUI(() -> onClientDisconnected(socket));
             }
 
             @Override
             public void onStopped(TCPServer tcpServer) {
-                TCPServer.Callback.super.onStopped(tcpServer);
                 if (ipPublisher != null) {
                     ipPublisher.interrupt();
                     ipPublisher = null;
@@ -157,222 +182,275 @@ public class MainActivity extends CoreActivity implements IServer {
 
             @Override
             public void onReceived(Socket socket, String data) {
-                TCPServer.Callback.super.onReceived(socket, data);
-                int index = getSocketIndex(socket);
-                if (index != -1) {
-                    runOnUiThread(() -> onReceived(socket, data));
-                }
+                runOnUI(() -> onClientDataReceived(socket, data));
             }
         });
     }
 
     @Override
-    public void stopServer() {
-        if (tcpServer != null)
+    public void stopTCPServer() {
+        if (isTCPServerRunning())
             tcpServer.stop();
     }
 
     @Override
-    public boolean isServerRunning() {
+    public boolean isTCPServerRunning() {
         return tcpServer != null && tcpServer.isRunning();
     }
 
-    @CallSuper
     @Override
-    public void onSocketConnected(Socket socket, int position) {
-        for(IDataReceiver dataReceiver:dataReceiverList)
-            dataReceiver.onSocketConnected(socket, position);
-    }
-
-    @CallSuper
-    @Override
-    public void onSocketDisconnected(Socket socket, int position) {
-        for(IDataReceiver dataReceiver:dataReceiverList)
-            dataReceiver.onSocketDisconnected(socket, position);
-    }
-
-    @CallSuper
-    @Override
-    public void onReceived(Socket socket, String command) {
-        for(IDataReceiver dataReceiver:dataReceiverList)
-            dataReceiver.onReceived(socket, command);
-    }
-
-
-    @Override
-    public void send(String command) {
-        if (isServerRunning())
-            tcpServer.sendToAll(command);
-    }
-
-    @Override
-    public void sendToSocket(Socket socket, String command) {
-        if (isServerRunning())
-            tcpServer.sendTo(socket, command);
-    }
-
-    @Override
-    public List<Socket> getSocketList() {
-        return socketList;
-    }
-
-    @Override
-    public boolean hasConnectedSockets() {
-        return !socketList.isEmpty();
-    }
-
-    @Override
-    public void showNotification(String title, String message, @ColorRes int backgroundColor) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                notificationProgress.setVisibility(View.GONE);
-                if(notificationLayout.isExpanded()) {
-                    notificationLayout.setOnExpandCallback(new ExpandLayout.OnExpandCallback() {
-                        @Override
-                        public void onExpanded(ExpandLayout expandLayout) {
-
-                        }
-
-                        @Override
-                        public void onCollapsed(ExpandLayout expandLayout) {
-                            ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, R.color.backgroundColor));
-                            notificationTitle.setText(title);
-                            notificationText.setText(message);
-                            notificationLayout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, backgroundColor)));
-                            ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
-                            notificationLayout.expand();
-                        }
-                    });
-                    notificationLayout.collapse();
-                } else {
-                    notificationTitle.setText(title);
-                    notificationText.setText(message);
-                    notificationLayout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, backgroundColor)));
-                    ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
-                    notificationLayout.expand();
-                }
-            }
-        });
-    }
-
-    @Override
-    public void showNotification(String title, String message, int backgroundColor, boolean indeterminate, int progress) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                notificationProgress.setVisibility(View.VISIBLE);
-                updateProgress(indeterminate, progress);
-                if(notificationLayout.isExpanded()) {
-                    notificationLayout.setOnExpandCallback(new ExpandLayout.OnExpandCallback() {
-                        @Override
-                        public void onExpanded(ExpandLayout expandLayout) {
-
-                        }
-
-                        @Override
-                        public void onCollapsed(ExpandLayout expandLayout) {
-                            ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, R.color.backgroundColor));
-                            notificationTitle.setText(title);
-                            notificationText.setText(message);
-                            notificationLayout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, backgroundColor)));
-                            ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
-                            notificationLayout.expand();
-                        }
-                    });
-                    notificationLayout.collapse();
-                } else {
-                    notificationTitle.setText(title);
-                    notificationText.setText(message);
-                    notificationLayout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, backgroundColor)));
-                    ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
-                    notificationLayout.expand();
-                }
-            }
-        });
-    }
-
-    @Override
-    public void updateProgress(boolean indeterminate, int progress) {
-        notificationProgress.setIndeterminate(indeterminate);
-        notificationProgress.setProgress(progress);
-    }
-
-    @Override
-    public void dismissNotification() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                notificationLayout.setOnExpandCallback(new ExpandLayout.OnExpandCallback() {
-                    @Override
-                    public void onExpanded(ExpandLayout expandLayout) {
-
-                    }
-
-                    @Override
-                    public void onCollapsed(ExpandLayout expandLayout) {
-                        ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, R.color.backgroundColor));
-                    }
-                });
-                notificationLayout.collapse();
-
-            }
-        });
-    }
-
-    @Override
-    public String serialize(Object object) {
-        if(object == null)
-            return "";
-        return object.getClass().getSimpleName()+"@"+new Gson().toJson(object);
-    }
-
-    @Override
-    public void send(Client client, Object object) {
-        sendToSocket(client.socket, serialize(object));
-    }
-
-    @Override
-    public void send(Client client, String command) {
-        sendToSocket(client.socket, command);
-    }
-
-    @Override
-    public boolean isConnected(Socket socket) {
-        if (socketList.isEmpty())
-            return false;
-        for (Socket s : socketList)
-            if(socket.getInetAddress().getHostAddress().equals(s.getInetAddress().getHostAddress()) && s.getLocalPort() == socket.getLocalPort())
-                return true;
-        return false;
-    }
-
-    @Override
-    public void disconnect(Socket socket) {
+    public void startMediaServer(Video video) {
         try {
-            socket.close();
+            mediaStreamingServer = new MediaStreamingServer(video.path, Constant.SERVER_STREAM_VIDEO_PORT);
+            mediaStreamingServer.start();
+        } catch (IOException ignored) {
+        }
+    }
+
+    @Override
+    public void stopMediaServer() {
+        if (mediaStreamingServer != null) {
+            mediaStreamingServer.closeAllConnections();
+            mediaStreamingServer.stop();
+        }
+    }
+
+    @Override
+    public String getHost() {
+        return Networks.getLocalIpAddress();
+    }
+
+    @Override
+    public void onClientConnected(Socket socket) {
+        for (IDataReceiver dataReceiver : dataReceiverList)
+            dataReceiver.onClientConnected(socket);
+    }
+
+    @Override
+    public void onClientDisconnected(Socket socket) {
+        for (IDataReceiver dataReceiver : dataReceiverList)
+            dataReceiver.onClientDisconnected(socket);
+    }
+
+    @Override
+    public void onClientDataReceived(Socket socket, @NonNull String data) {
+        for (IDataReceiver dataReceiver : dataReceiverList)
+            dataReceiver.onClientDataReceived(socket, data);
+    }
+
+    @Override
+    public void sendData(Socket socket, @NonNull String data) {
+        tcpServer.sendTo(socket, data);
+    }
+
+    @Override
+    public void sendData(Socket socket, @NonNull Object data) {
+        tcpServer.sendTo(socket, serializeObject(data));
+    }
+
+    @Override
+    public void sendData(@NonNull String data) {
+        for (Socket socket : socketList)
+            sendData(socket, data);
+    }
+
+    @Override
+    public void sendData(@NonNull Object data) {
+        for (Socket socket : socketList)
+            sendData(socket, serializeObject(data));
+    }
+
+    @Override
+    public boolean isClientConnected(Socket socket) {
+        return Lists.contains(socketList, new Comparator<Socket, Socket>(socket) {
+            @Override
+            public boolean compare(Socket one, Socket other) {
+                return one.getInetAddress().getHostAddress().equals(other.getInetAddress().getHostAddress()) && other.getLocalPort() == one.getLocalPort();
+            }
+        });
+    }
+
+    @Override
+    public void disconnectClient(Socket socket) {
+        try {
+            Lists.getNullSafe(socketList, new Comparator<Socket, Socket>(socket) {
+                @Override
+                public boolean compare(Socket one, Socket other) {
+                    return one.getInetAddress().getHostAddress().equals(other.getInetAddress().getHostAddress()) && other.getLocalPort() == one.getLocalPort();
+                }
+            }).close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public int getSocketIndex(Socket socket) {
-        for (int i = 0; i < socketList.size(); i++) {
-            Socket s = socketList.get(i);
-            if(socket.getInetAddress().getHostAddress().equals(s.getInetAddress().getHostAddress()) && s.getLocalPort() == socket.getLocalPort())
-                return i;
-        }
-        return -1;
+    public String serializeObject(@NonNull Object object) {
+        return object.getClass().getSimpleName() + "@" + new Gson().toJson(object);
     }
+
+    @Override
+    @Nullable
+    public Object deserializeObject(@NonNull String object) {
+        if (object.contains("@")) {
+            String[] params = object.split("@");
+            if (params.length == 2) {
+                String className = params[0];
+                String data = params[1];
+                try {
+                    DexFile dexFile = new DexFile(getPackageCodePath());
+                    for (Enumeration<String> classNames = dexFile.entries(); classNames.hasMoreElements(); )
+                        if (classNames.nextElement().contains(className))
+                            return new Gson().fromJson(data, getClassLoader().loadClass(className));
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public int connectedClientsCount() {
+        return socketList.size();
+    }
+
+    @Override
+    public boolean hasConnectedClients() {
+        return !socketList.isEmpty();
+    }
+
+    @Override
+    public boolean hasActiveSyncSessions() {
+        return false;
+    }
+
+    @Override
+    public boolean isClientSyncing(Socket socket) {
+        return false;
+    }
+
+    @Override
+    public boolean isClientSyncFinished(Socket socket, @NonNull String hash) {
+        return false;
+    }
+
+    @Override
+    public boolean isClientSyncFinished(Socket socket, List<String> hashList) {
+        return false;
+    }
+
+    @Override
+    public void startSyncSession(Socket socket, @NonNull String hash) {
+
+    }
+
+    @Override
+    public void startSyncSession(Socket socket, List<String> hashList) {
+
+    }
+
+    @Override
+    public void stopSyncSession(Socket socket) {
+
+    }
+
+    @Override
+    public void requestSync(Socket socket, @NonNull Video video) {
+
+    }
+
+    @Override
+    public void requestSync(Socket socket, List<Video> videoList) {
+
+    }
+
+    @Override
+    public void requestSyncStatus(Socket socket, @NonNull String hash) {
+
+    }
+
+    private void collectVideos() {
+        allVideosRetrieved = false;
+        if(videoList == null)
+            videoList = new ArrayList<>();
+        videoList.clear();
+        List<File> files = Files.getAllVideos(this, new File(Environment.getExternalStorageDirectory(), "VRVideos"));
+        for (int i = 0; i < files.size(); i++) {
+            File file = files.get(i);
+            Video video = new Video(file);
+            video.thumb = ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND);
+            video.path = file.getPath().trim();
+            video.name = file.getName().trim();
+            video.size = file.length();
+            video.hash = Hash.get(file, HashAlgorithm.MD5);
+            MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+            metaRetriever.setDataSource(file.getAbsolutePath());
+            video.duration = Long.parseLong(metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+            video.resolution = String.format("%sx%s", metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH), metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+            metaRetriever.release();
+            videoList.add(video);
+        }
+        allVideosRetrieved = true;
+    }
+
+    @Override
+    public List<Video> getVideoList() {
+        return videoList;
+    }
+
+    @Override
+    public boolean allRetrievedLoaded() {
+        return allVideosRetrieved;
+    }
+
+    //
+//    @Override
+//    public void showNotification(String title, String message, @ColorRes int backgroundColor) {
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                notificationProgress.setVisibility(View.GONE);
+//                notificationTitle.setText(title);
+//                notificationText.setText(message);
+//                notificationLayout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, backgroundColor)));
+//                ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
+//                if (!notificationLayout.isExpanded())
+//                    notificationLayout.expand();
+//            }
+//        });
+//    }
+//
+//    @Override
+//    public void showNotification(String title, String message, int backgroundColor, boolean indeterminate, int progress) {
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                notificationProgress.setVisibility(View.VISIBLE);
+//                updateProgress(indeterminate, progress);
+//                notificationTitle.setText(title);
+//                notificationText.setText(message);
+//                notificationLayout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, backgroundColor)));
+//                ViewUtils.setStatusBarColor(MainActivity.this, ContextCompat.getColor(MainActivity.this, backgroundColor));
+//                if (!notificationLayout.isExpanded())
+//                    notificationLayout.expand();
+//            }
+//        });
+//    }
+//
+//    @Override
+//    public void updateProgress(boolean indeterminate, int progress) {
+//        notificationProgress.setIndeterminate(indeterminate);
+//        notificationProgress.setProgress(progress);
+//    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopServer();
+        stopTCPServer();
     }
 
-    public static IServer getServer(){
+    public static IServer getServer() {
         return server;
     }
 }

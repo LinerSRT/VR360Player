@@ -11,11 +11,12 @@ import java.net.Socket;
  **/
 public class Client {
     public transient Socket socket;
-    public final String hostname;
+    public String hostname;
     public String videoHash = "none";
     public boolean waitingAction = true;
     public boolean playingVideo = false;
     public boolean downloadingVideo = false;
+    public boolean downloadingFinished = false;
     public int downloadedBytes = 0;
     public int totalBytes = 0;
     public int downloadedProgress = 0;

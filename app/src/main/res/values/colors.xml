@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="backgroundColor">#18181C</color>
+    <color name="backgroundColor">#0E0E0E</color>
     <color name="backgroundSecondaryColor">#222325</color>
     <color name="backgroundSecondaryColorTransparent">#77222325</color>
     <color name="blackTransparent">#A3000000</color>
@@ -10,7 +10,7 @@
     <color name="textSecondaryColor">#BFBFBF</color>
     <color name="textDisabledColor">#6C6B6B</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="red">#D50000</color>
-    <color name="green">#2E7D32</color>
+    <color name="red">#A10C0C</color>
+    <color name="green">#09590D</color>
     <color name="disabledColor">#4A4A4A</color>
 </resources>

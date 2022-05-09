@@ -40,7 +40,7 @@ public class TCPServer {
         return clientSocketList;
     }
 
-    public void sendToAll(byte[] bytes){
+    public void sendToAll(byte[] bytes) {
         if (!(bytes == null || clientSocketList == null)) {
             for (Socket socket : clientSocketList) {
                 try {
@@ -52,11 +52,11 @@ public class TCPServer {
         }
     }
 
-    public void sendToAll(String string){
+    public void sendToAll(String string) {
         sendToAll(string.getBytes(StandardCharsets.UTF_8));
     }
 
-    public void sendTo(Socket socket, byte[] bytes){
+    public void sendTo(Socket socket, byte[] bytes) {
         if (bytes != null && socket != null && socket.isConnected()) {
             try {
                 socket.getOutputStream().write(bytes);
@@ -66,7 +66,7 @@ public class TCPServer {
         }
     }
 
-    public void sendTo(Socket socket, String string){
+    public void sendTo(Socket socket, String string) {
         sendTo(socket, string.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -82,7 +82,7 @@ public class TCPServer {
         }
     }
 
-    public void stop(){
+    public void stop() {
         if (clientSocketList != null) {
             for (Socket socket : clientSocketList) {
                 try {
@@ -158,9 +158,14 @@ public class TCPServer {
             while (isRunning()) {
                 try {
                     Socket socket = serverSocket.accept();
-                    clientSocketList.add(socket);
-                    handler.post(() -> callback.onConnected(socket));
-                    new Thread(new SocketThread(socket)).start();
+                    if (callback.acceptConnection(socket)) {
+                        clientSocketList.add(socket);
+                        callback.onConnected(socket);
+                        new Thread(new SocketThread(socket)).start();
+                    } else {
+                        if (!socket.isClosed())
+                            socket.close();
+                    }
                 } catch (IOException ignored) {
                 }
             }
@@ -170,38 +175,24 @@ public class TCPServer {
 
 
     public interface Callback {
-        @CallSuper
         default void onStarted(TCPServer server) {
-            Log.d(TAG, "onStarted: "+server.toString());
-
         }
 
-        @CallSuper
         default void onConnected(Socket socket) {
-            Log.d(TAG, "onConnected: "+socket.toString());
-
         }
 
-        @CallSuper
         default void onReceived(Socket socket, byte[] bytes) {
         }
 
-        @CallSuper
         default void onReceived(Socket socket, String string) {
-            if(!string.equals("check_ping"))
-                Log.d(TAG, "onReceived: "+socket.getInetAddress().toString()+" | "+string);
-
         }
 
-        @CallSuper
         default void onDisconnected(Socket socket) {
-            Log.d(TAG, "onDisconnected: "+socket.toString());
-
         }
 
-        @CallSuper
         default void onStopped(TCPServer server) {
-            Log.d(TAG, "onStopped: "+server.toString());
         }
+
+        boolean acceptConnection(Socket socket);
     }
 }

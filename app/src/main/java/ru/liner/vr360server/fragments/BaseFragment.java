@@ -43,14 +43,14 @@ public abstract class BaseFragment extends Fragment implements IDataReceiver {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        server.register(this);
+        server.registerDataReceiver(this);
         onFragmentCreated();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        server.unregister(this);
+        server.unregisterDataReceiver(this);
     }
 
 
@@ -64,17 +64,17 @@ public abstract class BaseFragment extends Fragment implements IDataReceiver {
     }
 
     @Override
-    public void onSocketConnected(Socket socket, int position) {
+    public void onClientConnected(Socket socket) {
 
     }
 
     @Override
-    public void onSocketDisconnected(Socket socket, int position) {
+    public void onClientDisconnected(Socket socket) {
 
     }
 
     @Override
-    public void onReceived(Socket socket, String command) {
+    public void onClientDataReceived(Socket socket, @NonNull String data) {
 
     }
 

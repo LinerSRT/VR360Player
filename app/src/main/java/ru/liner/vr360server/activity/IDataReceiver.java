@@ -1,9 +1,11 @@
 package ru.liner.vr360server.activity;
 
+import androidx.annotation.NonNull;
+
 import java.net.Socket;
 
 public interface IDataReceiver {
-    void onSocketConnected(Socket socket, int position);
-    void onSocketDisconnected(Socket socket, int position);
-    void onReceived(Socket socket, String command);
+    void onClientConnected(Socket socket);
+    void onClientDisconnected(Socket socket);
+    void onClientDataReceived(Socket socket, @NonNull String data);
 }

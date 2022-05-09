@@ -1,28 +1,21 @@
 package ru.liner.vr360server.fragments;
 
-import android.media.MediaMetadataRetriever;
-import android.media.ThumbnailUtils;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.io.File;
-import java.util.List;
-
 import ru.liner.vr360server.R;
 import ru.liner.vr360server.activity.IServer;
 import ru.liner.vr360server.activity.MainActivity;
 import ru.liner.vr360server.recycler.adapter.VideoAdapter;
 import ru.liner.vr360server.server.Video;
-import ru.liner.vr360server.utils.Files;
-import ru.liner.vr360server.utils.Worker;
-import ru.liner.vr360server.utils.hashing.Hash;
-import ru.liner.vr360server.utils.hashing.HashAlgorithm;
+import ru.liner.vr360server.utils.Utils;
+import ru.liner.vr360server.utils.ViewUtils;
+import ru.liner.vr360server.views.ExtraPaddingLinearLayoutManager;
 import ru.liner.vr360server.views.SwipeButton;
 
 /**
@@ -34,7 +27,10 @@ public class VideosFragment extends BaseFragment {
     private VideoAdapter videoAdapter;
     private RecyclerView videoRecycler;
     private TextView videoRecyclerEmpty;
+    private TextView videosFolder;
     private SwipeButton syncAndPlayButton;
+    private LinearLayout loadingVideosProgress;
+    private Video video;
 
 
     public VideosFragment(IServer server) {
@@ -49,7 +45,9 @@ public class VideosFragment extends BaseFragment {
     public void declareViews(View view) {
         videoRecycler = find(R.id.videoRecycler);
         videoRecyclerEmpty = find(R.id.videoRecyclerEmpty);
+        videosFolder = find(R.id.videosFolder);
         syncAndPlayButton = find(R.id.syncAndPlayButton);
+        loadingVideosProgress = find(R.id.loadingVideosProgress);
     }
 
     @Override
@@ -58,57 +56,46 @@ public class VideosFragment extends BaseFragment {
         videoAdapter.setCallback(new VideoAdapter.Callback() {
             @Override
             public void onSelected(Video video) {
+                VideosFragment.this.video = video;
                 syncAndPlayButton.setEnabled(true);
             }
         });
-        videoRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+        videoRecycler.setLayoutManager(new ExtraPaddingLinearLayoutManager(getContext(), 0, ViewUtils.dpToPx(48)));
         videoRecycler.setAdapter(videoAdapter);
         syncAndPlayButton.setEnabled(false);
         syncAndPlayButton.setStateCallback(new SwipeButton.StateCallback() {
             @Override
             public void onStateChanged(SwipeButton swipeButton, boolean enabled, boolean fromUser) {
                 if (enabled) {
+                    if (fromUser) {
+//                        if (!server.isServerRunning() || !server.hasConnectedClients()) {
+//                            swipeButton.disableButton(false);
+//                            server.showNotification("Server not started!", "Start server and connect at least one client to start stream", R.color.red);
+//                        } else {
+//                            if (video != null) {
+//                                server.startMediaServer(video);
+//                                server.send(String.format("download_video@%s@%s", "http://" + server.getHost() + ":" + Constant.SERVER_STREAM_VIDEO_PORT, new Gson().toJson(video)));
+//                            }
+//                        }
+                    }
                     syncAndPlayButton.setButtonBackground(ContextCompat.getDrawable(getContext(), R.drawable.shape_rounded_red));
                 } else {
                     syncAndPlayButton.setButtonBackground(ContextCompat.getDrawable(getContext(), R.drawable.shape_rounded_green));
                 }
-                if (fromUser) {
-                    if (!server.isServerRunning()) {
-                        swipeButton.disableButton(false);
-                        server.showNotification("Server not started!", "Start server and connect at least one client to start stream", R.color.red);
-                    } else {
-
-                    }
-                }
             }
         });
-
-        server.showNotification("Loading videos", "Loading video information from device", R.color.backgroundSecondaryColor, false, 0);
-        Worker.runInBackground(new Runnable() {
-            @Override
-            public void run() {
-                List<File> files = Files.getAllVideos(getContext(), new File(Environment.getExternalStorageDirectory(), "VRVideos"));
-                for (int i = 0; i < files.size(); i++) {
-                    server.updateProgress(false, Math.round(((float) i / files.size()) * 100f));
-                    File file = files.get(i);
-                    Video video = new Video(file);
-                    video.thumb = ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND);
-                    video.path = file.getPath().trim();
-                    video.name = file.getName().trim();
-                    video.size = file.length();
-                    video.hash = Hash.get(file, HashAlgorithm.MD5);
-                    MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
-                    metaRetriever.setDataSource(file.getAbsolutePath());
-                    video.resolution = String.format("%sx%s", metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH), metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
-                    metaRetriever.release();
-                    parentView.post(() -> {
-                        videoAdapter.add(video);
-                        videoRecyclerEmpty.setVisibility(videoAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
-                    });
-                }
-                server.showNotification("Video selected", "Start server and connect clients to stream", R.color.backgroundSecondaryColor);
-            }
+        server.runBackground(() -> {
+            while (!server.allRetrievedLoaded())
+                Utils.sleep(16);
+            for (Video video : server.getVideoList())
+                server.runOnUI(() -> {
+                    loadingVideosProgress.setVisibility(View.GONE);
+                    videoAdapter.add(video);
+                    videoRecyclerEmpty.setVisibility(videoAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
+                    videosFolder.setVisibility(videoAdapter.getItemCount() != 0 ? View.VISIBLE : View.GONE);
+                });
         });
+        //server.showNotification("Loading videos", "Loading video information from device", R.color.backgroundSecondaryColor, false, 0);
     }
 
     @Override

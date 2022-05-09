@@ -32,6 +32,17 @@
             android:textStyle="bold|italic" />
 
         <TextView
+            android:id="@+id/videoDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:drawableStart="@drawable/ic_baseline_access_time_24"
+            android:drawablePadding="4dp"
+            android:gravity="center"
+            android:text="Duration: 0"
+            android:textColor="@color/textSecondaryColor"
+            android:textSize="@dimen/textSecondarySize" />
+        <TextView
             android:id="@+id/videoSize"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

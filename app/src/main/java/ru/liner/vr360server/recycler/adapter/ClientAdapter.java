@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -102,7 +103,7 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.ViewHolder
 
         if (client.waitingAction) {
             holder.clientStatus.setText("waiting for command");
-        } else if (client.downloadingVideo) {
+        } else if (client.downloadingVideo && !client.downloadingFinished) {
             holder.clientStatus.setText("downloading video");
             holder.clientProgressBar.setVisibility(View.VISIBLE);
             holder.clientProgressBarText.setVisibility(View.VISIBLE);
@@ -117,10 +118,6 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.ViewHolder
         } else if (client.playingVideo) {
             holder.clientStatus.setText("playing video");
         }
-        holder.clientDisconnect.setOnClickListener(v -> {
-            client.shouldReconnect = false;
-            server.send(client, client);
-        });
     }
 
     @Override
@@ -133,15 +130,15 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.ViewHolder
         private final TextView clientStatus;
         private final ProgressBar clientProgressBar;
         private final TextView clientProgressBarText;
-        private final TextView clientDisconnect;
+        private final ImageView clientDisconnect;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            clientHostname = itemView.findViewById(R.id.videoName);
+            clientHostname = itemView.findViewById(R.id.clientHostName);
             clientStatus = itemView.findViewById(R.id.clientStatus);
             clientProgressBar = itemView.findViewById(R.id.clientProgressBar);
             clientProgressBarText = itemView.findViewById(R.id.clientProgressBarText);
-            clientDisconnect = itemView.findViewById(R.id.videoThumb);
+            clientDisconnect = itemView.findViewById(R.id.clientDisconnect);
         }
     }
 }

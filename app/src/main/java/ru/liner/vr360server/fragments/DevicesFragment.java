@@ -16,6 +16,7 @@ import ru.liner.vr360server.activity.IServer;
 import ru.liner.vr360server.activity.MainActivity;
 import ru.liner.vr360server.recycler.adapter.ClientAdapter;
 import ru.liner.vr360server.server.Client;
+import ru.liner.vr360server.server.Video;
 import ru.liner.vr360server.views.SwipeButton;
 
 /**
@@ -52,13 +53,12 @@ public class DevicesFragment extends BaseFragment {
         startServerButton.setStateCallback((swipeButton, enabled, fromUser) -> {
             if (enabled) {
                 startServerButton.setButtonBackground(ContextCompat.getDrawable(getContext(), R.drawable.shape_rounded_red));
-                server.showNotification("Server started!", "Waiting for client connection", R.color.primaryColor);
-                server.startServer();
-
+                //server.showNotification("Server started!", "Waiting for client connection", R.color.primaryColor);
+                server.startTCPServer();
             } else {
                 startServerButton.setButtonBackground(ContextCompat.getDrawable(getContext(), R.drawable.shape_rounded_primary));
-                server.showNotification("Server stopped!", "All connections has been closed", R.color.red);
-                server.stopServer();
+                //server.showNotification("Server stopped!", "All connections has been closed", R.color.red);
+                server.stopTCPServer();
             }
         });
     }
@@ -69,33 +69,50 @@ public class DevicesFragment extends BaseFragment {
     }
 
     @Override
-    public void onSocketConnected(Socket socket, int position) {
-        super.onSocketConnected(socket, position);
+    public void onClientConnected(Socket socket) {
+        super.onClientConnected(socket);
         clientAdapter.add(socket);
         socketRecyclerEmpty.setVisibility(clientAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
     }
 
     @Override
-    public void onSocketDisconnected(Socket socket, int position) {
-        super.onSocketDisconnected(socket, position);
+    public void onClientDisconnected(Socket socket) {
+        super.onClientDisconnected(socket);
         clientAdapter.remove(socket);
         socketRecyclerEmpty.setVisibility(clientAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
     }
 
-    private void onClientChanged(Socket socket, Client client) {
-        client.socket = socket;
-        clientAdapter.update(client);
-    }
-
-
-    @Override
-    public void onReceived(Socket socket, String command) {
-        super.onReceived(socket, command);
-        if (command.contains("@")) {
-            String[] data = command.split("@");
-            if (data.length == 2 && data[0].equals("Client"))
-                onClientChanged(socket, new Gson().fromJson(data[1], Client.class));
-        }
-    }
+    //
+//    @Override
+//    public void onSocketConnected(Socket socket, int position) {
+//        super.onSocketConnected(socket, position);
+//        clientAdapter.add(socket);
+//        server.send(server.serialize(clientAdapter.get(position)));
+//        socketRecyclerEmpty.setVisibility(clientAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
+//    }
+//
+//    @Override
+//    public void onSocketDisconnected(Socket socket, int position) {
+//        super.onSocketDisconnected(socket, position);
+//        clientAdapter.remove(socket);
+//        socketRecyclerEmpty.setVisibility(clientAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
+//    }
+//
+//    private void onClientChanged(Socket socket, Client client) {
+//        client.socket = socket;
+//        client.hostname = socket.getInetAddress().getHostAddress();
+//        clientAdapter.update(client);
+//    }
+//
+//
+//    @Override
+//    public void onReceived(Socket socket, String command) {
+//        super.onReceived(socket, command);
+//        if (command.contains("@")) {
+//            String[] data = command.split("@");
+//            if (data.length == 2 && data[0].equals("Client"))
+//                onClientChanged(socket, new Gson().fromJson(data[1], Client.class));
+//        }
+//    }
 
 }

@@ -1,5 +1,7 @@
 package ru.liner.vr360server.utils;
 
+import androidx.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,5 +36,22 @@ public class Lists {
                 return true;
         }
         return false;
+    }
+
+    @Nullable
+    public static <A, B> A get(List<A> objectList, Comparator<A, B> comparator){
+        for (int i = 0; i < objectList.size(); i++) {
+            if(comparator.compare(objectList.get(i), comparator.other))
+                return objectList.get(i);
+        }
+        return null;
+    }
+
+    public static <A> A getNullSafe(List<A> objectList, Comparator<A, A> comparator){
+        for (int i = 0; i < objectList.size(); i++) {
+            if(comparator.compare(objectList.get(i), comparator.other))
+                return objectList.get(i);
+        }
+        return comparator.other;
     }
 }

@@ -14,6 +14,7 @@ public class Video {
     public transient Bitmap thumb;
     public String hash;
     public long size;
+    public long duration;
     public String resolution;
     public String name;
     public String path;
@@ -28,6 +29,7 @@ public class Video {
         return "Video{" +
                 "hash='" + hash + '\'' +
                 ", size=" + size +
+                ", duration=" + duration +
                 ", resolution='" + resolution + '\'' +
                 ", name='" + name + '\'' +
                 ", path='" + path + '\'' +

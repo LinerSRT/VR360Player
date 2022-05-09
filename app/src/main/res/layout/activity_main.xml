@@ -8,49 +8,6 @@
     android:background="?backgroundColor"
     android:orientation="vertical">
 
-    <ru.liner.vr360server.views.ExpandLayout
-        android:id="@+id/notificationLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:el_expanded="true"
-        android:padding="16dp"
-        android:background="@drawable/background_round_bottom"
-        app:el_duration="300"
-        android:elevation="8dp"
-        android:orientation="vertical">
-
-       <LinearLayout
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content"
-           android:orientation="vertical">
-           <TextView
-               android:id="@+id/notificationTitle"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               tools:text="Status text"
-               android:textSize="@dimen/textSize"
-               android:textStyle="bold"
-               android:textColor="@color/textColor"/>
-           <TextView
-               android:id="@+id/notificationText"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               tools:text="Descrition text"
-               android:textSize="@dimen/textSecondarySize"
-               android:textColor="@color/textSecondaryColor"/>
-
-           <ProgressBar
-               android:id="@+id/notificationProgress"
-               style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-               android:layout_width="match_parent"
-               android:layout_height="wrap_content"
-               android:layout_marginTop="8dp"
-               android:layout_marginEnd="8dp"
-               android:progress="50"
-               android:progressDrawable="@drawable/progressbar_track" />
-       </LinearLayout>
-    </ru.liner.vr360server.views.ExpandLayout>
-
     <ru.liner.vr360server.views.ExtendedViewPager
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
@@ -59,10 +16,10 @@
 
     <com.skydoves.androidbottombar.AndroidBottomBarView
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="52dp"
         android:id="@+id/bottomNavigation"
         android:background="@drawable/background_round_top"
-        app:bottomBar_duration="300"
+        app:bottomBar_duration="250"
         android:elevation="8dp"
         app:bottomBar_flavor="icon"
         app:bottomBar_indicator_color="@color/primaryColor"
