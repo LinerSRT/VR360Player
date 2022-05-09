@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/videoLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:background="@drawable/background_round"
+    android:backgroundTint="@color/backgroundSecondaryColorTransparent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="@+id/videoThumb"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/videoThumb"
+        app:layout_constraintTop_toTopOf="@+id/videoThumb">
+
+        <ru.liner.vr360server.views.MarqueeTextView
+            android:id="@+id/videoName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_baseline_info_24"
+            android:drawablePadding="4dp"
+            android:gravity="center"
+            android:text="Sample.mp4"
+            android:textColor="@color/textColor"
+            android:textSize="@dimen/textSize"
+            android:textStyle="bold|italic" />
+
+        <TextView
+            android:id="@+id/videoSize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:drawableStart="@drawable/ic_baseline_data_usage_12"
+            android:drawablePadding="4dp"
+            android:gravity="center"
+            android:text="Size: 2.2 MB"
+            android:textColor="@color/textSecondaryColor"
+            android:textSize="@dimen/textSecondarySize" />
+
+        <ru.liner.vr360server.views.MarqueeTextView
+            android:id="@+id/videoPath"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:drawableStart="@drawable/storage"
+            android:drawablePadding="4dp"
+            android:gravity="center"
+            android:text="storage/Downloads/Sample.mp4"
+            android:textColor="@color/textSecondaryColor"
+            android:textSize="@dimen/textSecondarySize" />
+
+
+        <TextView
+            android:id="@+id/videoResolution"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:drawableStart="@drawable/resolution"
+            android:drawablePadding="4dp"
+            android:gravity="center"
+            android:text="1280x720"
+            android:textColor="@color/textSecondaryColor"
+            android:textSize="@dimen/textSecondarySize" />
+    </LinearLayout>
+
+    <ru.liner.vr360server.views.RoundedImageView
+        android:id="@+id/videoThumb"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/video_thumb"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ru.liner.vr360server.views.RoundedImageView
+        android:id="@+id/videoSelection"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:background="@color/blackTransparent"
+        android:padding="36dp"
+        android:src="@drawable/ic_baseline_check_24"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

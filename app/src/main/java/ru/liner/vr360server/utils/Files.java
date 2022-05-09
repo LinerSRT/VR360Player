@@ -1,11 +1,9 @@
 package ru.liner.vr360server.utils;
 
-import android.annotation.SuppressLint;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -14,7 +12,6 @@ import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.loader.content.CursorLoader;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -26,8 +23,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author : "Line'R"
@@ -36,6 +35,42 @@ import java.net.URL;
  **/
 public class Files {
     private static final byte[] SECURE_SEQUENCE = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+    public static List<File> getAllVideos(@NonNull Context context, @NonNull File directory) {
+        List<File> fileList = new ArrayList<>();
+        File[] files = directory.listFiles();
+        if (files != null && files.length != 0) {
+            for(File file:files){
+                if(file != null) {
+                    if (file.isDirectory()) {
+                        fileList.addAll(getAllVideos(context, file));
+                    } else {
+                        if(file.getName().endsWith("mp4"))
+                            fileList.add(file);
+                    }
+                }
+            }
+        }
+        return fileList;
+    }
+
+    public static List<File> getVideosFromDirectory(@NonNull Context context, @NonNull File directory) {
+        List<File> fileList = new ArrayList<>();
+        getFilesFromDirectory(context, directory).forEach(file -> {
+            if (getMIMEType(file).equals("video/mp4"))
+                fileList.add(file);
+        });
+        return fileList;
+    }
+
+    public static List<File> getFilesFromDirectory(@NonNull Context context, @NonNull File directory) {
+
+            File[] files = directory.listFiles();
+            if (files != null && files.length != 0)
+                return Arrays.asList(files);
+
+        return new ArrayList<>();
+    }
 
     public static void encodeFile(@NonNull File file) throws IOException {
         RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
@@ -64,9 +99,10 @@ public class Files {
     }
 
 
-
-    private static String getMIMEType(@NonNull File file) {
+    public static String getMIMEType(@NonNull File file) {
         String type = "*/*";
+        if (file.isDirectory())
+            return type;
         String fileName = file.getName();
         int dotIndex = fileName.lastIndexOf(".");
         if (dotIndex < 0)
@@ -164,13 +200,11 @@ public class Files {
                 if ("primary".equalsIgnoreCase(type)) {
                     return Environment.getExternalStorageDirectory() + "/" + split[1];
                 }
-            }
-            else if (isDownloadsDocument(uri)) {
+            } else if (isDownloadsDocument(uri)) {
                 final String id = DocumentsContract.getDocumentId(uri);
                 final Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.parseLong(id));
                 return getDataColumn(context, contentUri, null, null);
-            }
-            else if (isMediaDocument(uri)) {
+            } else if (isMediaDocument(uri)) {
                 final String docId = DocumentsContract.getDocumentId(uri);
                 final String[] split = docId.split(":");
                 final String type = split[0];

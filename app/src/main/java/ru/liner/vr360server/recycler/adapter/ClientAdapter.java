@@ -137,11 +137,11 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.ViewHolder
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            clientHostname = itemView.findViewById(R.id.clientHostname);
+            clientHostname = itemView.findViewById(R.id.videoName);
             clientStatus = itemView.findViewById(R.id.clientStatus);
             clientProgressBar = itemView.findViewById(R.id.clientProgressBar);
             clientProgressBarText = itemView.findViewById(R.id.clientProgressBarText);
-            clientDisconnect = itemView.findViewById(R.id.clientDisconnect);
+            clientDisconnect = itemView.findViewById(R.id.videoThumb);
         }
     }
 }

@@ -58,4 +58,8 @@ public abstract class Worker implements Runnable {
     public boolean isRunning() {
         return isRunning;
     }
+
+    public static void runInBackground(Runnable runnable){
+        new Thread(runnable).start();
+    }
 }
