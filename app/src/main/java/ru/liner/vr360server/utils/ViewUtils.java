@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AccelerateInterpolator;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.IdRes;
@@ -137,5 +138,25 @@ public class ViewUtils {
                 "android"
         );
         return resources.getDimensionPixelSize(resourceId);
+    }
+
+    public static void setVisibility(View view, int visibility){
+        if(view.getVisibility() != visibility){
+            if(visibility == View.INVISIBLE || visibility == View.GONE){
+                view.animate()
+                        .alpha(0f)
+                        .setDuration(300)
+                        .setInterpolator(new AccelerateInterpolator())
+                        .withStartAction(() -> view.setAlpha(1f))
+                        .withEndAction(() -> view.setVisibility(visibility)).start();
+            } else {
+                view.animate()
+                        .alpha(1f)
+                        .setDuration(300)
+                        .setInterpolator(new AccelerateInterpolator())
+                        .withStartAction(() -> view.setAlpha(0f))
+                        .withEndAction(() -> view.setVisibility(visibility)).start();
+            }
+        }
     }
 }

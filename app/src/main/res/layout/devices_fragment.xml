@@ -3,16 +3,46 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:animateLayoutChanges="true"
     android:background="@color/backgroundColor"
     android:layout_height="match_parent">
 
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/socketRecycler"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:listitem="@layout/device_adapter_holder"
-        style="@style/ScrollbarStyle"/>
+    <TextView
+        android:id="@+id/connectedDeviceCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:drawableStart="@drawable/ic_baseline_devices_other_24"
+        android:text="Connected 1 device"
+        android:gravity="center"
+        android:drawablePadding="4dp"
+        android:textColor="@color/textColor"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ru.liner.vr360server.views.FadingEdgeLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:fel_edge="top|bottom"
+        app:fel_size_bottom="64dp"
+        app:fel_size_top="32dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/connectedDeviceCount"
+        app:layout_goneMarginTop="8dp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/socketRecycler"
+            style="@style/ScrollbarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:listitem="@layout/device_adapter_holder" />
+
+    </ru.liner.vr360server.views.FadingEdgeLayout>
 
     <TextView
         android:id="@+id/socketRecyclerEmpty"
@@ -35,19 +65,49 @@
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
         android:layout_marginBottom="8dp"
+        android:elevation="1dp"
         app:button_background="@drawable/shape_rounded_primary"
         app:button_bottom_padding="8dp"
-        app:button_right_padding="8dp"
-        app:button_top_padding="8dp"
-        android:elevation="1dp"
-        app:button_left_padding="8dp"
         app:button_image_disabled="@drawable/ic_baseline_wifi_tethering_24"
         app:button_image_enabled="@drawable/stop_stream"
         app:button_image_height="48dp"
         app:button_image_width="48dp"
+        app:button_left_padding="8dp"
+        app:button_right_padding="8dp"
+        app:button_top_padding="8dp"
         app:has_activate_state="true"
         app:initial_state="disabled"
         app:inner_text="Swipe to enable"
+        app:inner_text_background="@drawable/shape_rounded_background"
+        app:inner_text_bottom_padding="12dp"
+        app:inner_text_color="@android:color/white"
+        app:inner_text_size="@dimen/textSecondarySize"
+        app:inner_text_top_padding="12dp"
+        app:layout_constraintBottom_toTopOf="@+id/playButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+    <ru.liner.vr360server.views.SwipeButton
+        android:id="@+id/playButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="8dp"
+        android:elevation="1dp"
+        app:button_background="@drawable/shape_rounded_primary"
+        app:button_bottom_padding="8dp"
+        app:button_image_disabled="@drawable/ic_baseline_play_arrow_24"
+        app:button_image_enabled="@drawable/ic_baseline_stop_24"
+        app:button_image_height="48dp"
+        app:button_image_width="48dp"
+        app:button_left_padding="8dp"
+        app:button_right_padding="8dp"
+        app:button_top_padding="8dp"
+        app:has_activate_state="true"
+        app:initial_state="disabled"
+        app:inner_text="Swipe to play"
         app:inner_text_background="@drawable/shape_rounded_background"
         app:inner_text_bottom_padding="12dp"
         app:inner_text_color="@android:color/white"

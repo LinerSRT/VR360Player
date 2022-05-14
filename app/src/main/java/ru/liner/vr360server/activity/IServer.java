@@ -40,20 +40,11 @@ public interface IServer {
     int connectedClientsCount();
     boolean hasConnectedClients();
     boolean hasActiveSyncSessions();
-    boolean isClientSyncing(Socket socket);
-    boolean isClientSyncFinished(Socket socket, @NonNull String hash);
-    boolean isClientSyncFinished(Socket socket, List<String> hashList);
-    void startSyncSession(Socket socket, @NonNull String hash);
-    void startSyncSession(Socket socket, List<String> hashList);
-    void stopSyncSession(Socket socket);
-    void stopSyncSession();
+    boolean hasLoadedVideos();
+    boolean hasSelectVideo();
+    Video getSelectedVideo();
+    List<Video> getLoadedVideos();
     void requestSync(Socket socket, @NonNull Video video);
     void requestSync(@NonNull Video video);
-    void requestSync(Socket socket, List<Video> videoList);
-    void requestSync(List<Video> videoList);
-    void requestSyncStatus(Socket socket, @NonNull String hash);
-
-
-    List<Video> getVideoList();
-    boolean allRetrievedLoaded();
+    void onVideoSelected(Video video);
 }

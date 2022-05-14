@@ -28,11 +28,11 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
+        app:layout_goneMarginTop="8dp"
         app:fel_edge="top|bottom"
         app:fel_size_bottom="32dp"
         app:fel_size_top="32dp"
-        app:layout_constraintBottom_toTopOf="@+id/syncAndPlayButton"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/videosFolder">
@@ -91,35 +91,5 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </LinearLayout>
-
-    <ru.liner.vr360server.views.SwipeButton
-        android:id="@+id/syncAndPlayButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="8dp"
-        android:translationY="100dp"
-        android:elevation="1dp"
-        app:button_background="@drawable/shape_rounded_primary"
-        app:button_bottom_padding="8dp"
-        app:button_image_disabled="@drawable/ic_baseline_play_arrow_24"
-        app:button_image_enabled="@drawable/ic_baseline_stop_24"
-        app:button_image_height="48dp"
-        app:button_image_width="48dp"
-        app:button_left_padding="8dp"
-        app:button_right_padding="8dp"
-        app:button_top_padding="8dp"
-        app:has_activate_state="true"
-        app:initial_state="disabled"
-        app:inner_text="Swipe to play"
-        app:inner_text_background="@drawable/shape_rounded_background"
-        app:inner_text_bottom_padding="12dp"
-        app:inner_text_color="@android:color/white"
-        app:inner_text_size="@dimen/textSecondarySize"
-        app:inner_text_top_padding="12dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

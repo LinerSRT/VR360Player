@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import dalvik.system.DexFile;
 import ru.liner.vr360server.CoreActivity;
@@ -48,6 +50,7 @@ import ru.liner.vr360server.utils.pagetransformer.ParallaxTransformer;
 import ru.liner.vr360server.views.ExtendedViewPager;
 
 
+@SuppressWarnings("ConstantConditions")
 public class MainActivity extends CoreActivity implements IServer {
     private static IServer server;
     private AndroidBottomBarView bottomNavigation;
@@ -58,7 +61,10 @@ public class MainActivity extends CoreActivity implements IServer {
     private IPPublisher ipPublisher;
     private List<IDataReceiver> dataReceiverList;
     private List<Video> videoList;
-    private boolean allVideosRetrieved;
+    private Video video;
+    private List<Socket> blackListedSockets;
+    private List<Socket> syncedSockets;
+    private boolean hasLoadedVideos;
 
     @Override
     protected void onStart() {
@@ -82,7 +88,6 @@ public class MainActivity extends CoreActivity implements IServer {
         FragmentAdapter fragmentAdapter = new FragmentAdapter(getSupportFragmentManager());
         fragmentAdapter.add(new DevicesFragment(this));
         fragmentAdapter.add(new VideosFragment(this));
-        fragmentAdapter.add(new SettingsFragment(this));
         viewPager.setPagingEnabled(false);
         viewPager.setAdapter(fragmentAdapter);
         viewPager.setOffscreenPageLimit(3);
@@ -96,11 +101,6 @@ public class MainActivity extends CoreActivity implements IServer {
         bottomMenuItems.add(new BottomMenuItem(this)
                 .setTitle("Videos")
                 .setIcon(R.drawable.ic_baseline_video_library_24)
-                .setIconSize(24)
-                .build());
-        bottomMenuItems.add(new BottomMenuItem(this)
-                .setTitle("Settings")
-                .setIcon(R.drawable.ic_baseline_settings_24)
                 .setIconSize(24)
                 .build());
         bottomNavigation.addBottomMenuItems(bottomMenuItems);
@@ -146,6 +146,9 @@ public class MainActivity extends CoreActivity implements IServer {
             return;
         if (tcpServer == null)
             tcpServer = new TCPServer(Constant.SERVER_TCP_CONNECTION_PORT);
+        if(blackListedSockets == null)
+        blackListedSockets = new ArrayList<>();
+        blackListedSockets.clear();
         tcpServer.start(new TCPServer.Callback() {
             @Override
             public void onStarted(TCPServer tcpServer) {
@@ -156,7 +159,12 @@ public class MainActivity extends CoreActivity implements IServer {
 
             @Override
             public boolean acceptConnection(Socket socket) {
-                return !isClientConnected(socket);
+                return !isClientConnected(socket) && !Lists.contains(blackListedSockets, new Comparator<Socket, Socket>(socket) {
+                    @Override
+                    public boolean compare(Socket one, Socket other) {
+                        return one.getInetAddress().getHostAddress().equals(other.getInetAddress().getHostAddress()) && other.getLocalPort() == one.getLocalPort();
+                    }
+                });
             }
 
             @Override
@@ -189,6 +197,8 @@ public class MainActivity extends CoreActivity implements IServer {
 
     @Override
     public void stopTCPServer() {
+        if(blackListedSockets != null)
+        blackListedSockets.clear();
         if (isTCPServerRunning())
             tcpServer.stop();
     }
@@ -235,6 +245,8 @@ public class MainActivity extends CoreActivity implements IServer {
 
     @Override
     public void onClientDataReceived(Socket socket, @NonNull String data) {
+        if (data.equals("syncFinished"))
+            syncedSockets.remove(socket);
         for (IDataReceiver dataReceiver : dataReceiverList)
             dataReceiver.onClientDataReceived(socket, data);
     }
@@ -274,6 +286,7 @@ public class MainActivity extends CoreActivity implements IServer {
     @Override
     public void disconnectClient(Socket socket) {
         try {
+            blackListedSockets.add(socket);
             Lists.getNullSafe(socketList, new Comparator<Socket, Socket>(socket) {
                 @Override
                 public boolean compare(Socket one, Socket other) {
@@ -323,43 +336,27 @@ public class MainActivity extends CoreActivity implements IServer {
 
     @Override
     public boolean hasActiveSyncSessions() {
-        return false;
+        return !syncedSockets.isEmpty();
     }
 
     @Override
-    public boolean isClientSyncing(Socket socket) {
-        return false;
+    public boolean hasLoadedVideos() {
+        return hasLoadedVideos;
     }
 
     @Override
-    public boolean isClientSyncFinished(Socket socket, @NonNull String hash) {
-        return false;
+    public boolean hasSelectVideo() {
+        return getSelectedVideo() != null;
     }
 
     @Override
-    public boolean isClientSyncFinished(Socket socket, List<String> hashList) {
-        return false;
+    public Video getSelectedVideo() {
+        return video;
     }
 
     @Override
-    public void startSyncSession(Socket socket, @NonNull String hash) {
-        sendData(socket, "stopSyncSession@" + hash);
-    }
-
-    @Override
-    public void startSyncSession(Socket socket, List<String> hashList) {
-        for (String hash : hashList)
-            sendData(socket, "stopSyncSession@" + hash);
-    }
-
-    @Override
-    public void stopSyncSession(Socket socket) {
-        sendData(socket, "stopSyncSession@all");
-    }
-
-    @Override
-    public void stopSyncSession() {
-        sendData("stopSyncSession@all");
+    public List<Video> getLoadedVideos() {
+        return videoList;
     }
 
     @Override
@@ -373,24 +370,19 @@ public class MainActivity extends CoreActivity implements IServer {
     }
 
     @Override
-    public void requestSync(Socket socket, List<Video> videoList) {
-        for (Video video : videoList)
-            requestSync(socket, video);
-    }
-
-    @Override
-    public void requestSync(List<Video> videoList) {
-        for (Video video : videoList)
-            requestSync(video);
-    }
-
-    @Override
-    public void requestSyncStatus(Socket socket, @NonNull String hash) {
-        sendData(socket, "requestSyncStatus@" + hash);
+    public void onVideoSelected(Video video) {
+        this.video = video;
+        server.stopMediaServer();
+        server.startMediaServer(video);
+        if (syncedSockets == null)
+            syncedSockets = new ArrayList<>();
+        syncedSockets.clear();
+        syncedSockets.addAll(socketList);
+        server.requestSync(video);
     }
 
     private void collectVideos() {
-        allVideosRetrieved = false;
+        hasLoadedVideos = false;
         if (videoList == null)
             videoList = new ArrayList<>();
         videoList.clear();
@@ -410,17 +402,7 @@ public class MainActivity extends CoreActivity implements IServer {
             metaRetriever.release();
             videoList.add(video);
         }
-        allVideosRetrieved = true;
-    }
-
-    @Override
-    public List<Video> getVideoList() {
-        return videoList;
-    }
-
-    @Override
-    public boolean allRetrievedLoaded() {
-        return allVideosRetrieved;
+        hasLoadedVideos = true;
     }
 
 

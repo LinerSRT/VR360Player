@@ -97,27 +97,16 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.ViewHolder
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         Client client = clients.get(position);
-        holder.clientProgressBar.setVisibility(View.GONE);
-        holder.clientProgressBarText.setVisibility(View.GONE);
         holder.clientHostname.setText(client.hostname);
-
         if (client.waitingAction) {
-            holder.clientStatus.setText("waiting for command");
-        } else if (client.downloadingVideo && !client.downloadingFinished) {
-            holder.clientStatus.setText("downloading video");
-            holder.clientProgressBar.setVisibility(View.VISIBLE);
-            holder.clientProgressBarText.setVisibility(View.VISIBLE);
-            holder.clientProgressBar.setProgress(client.downloadedProgress);
-            holder.clientProgressBarText.setText(
-                    String.format("%s/%s (%s/s)",
-                            FileUtils.humanReadableByteCount(client.downloadedBytes),
-                            FileUtils.humanReadableByteCount(client.totalBytes),
-                            FileUtils.humanReadableByteCount(client.downloadingSpeed)
-                    ));
-
+            holder.clientStatus.setText("Waiting for video");
+        } else if (client.readyAction) {
+            holder.clientStatus.setText("Ready for play");
         } else if (client.playingVideo) {
-            holder.clientStatus.setText("playing video");
+            holder.clientStatus.setText("Playing");
         }
+        holder.clientDisconnect.setOnClickListener(v -> server.disconnectClient(client.socket));
+
     }
 
     @Override
@@ -128,16 +117,12 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.ViewHolder
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView clientHostname;
         private final TextView clientStatus;
-        private final ProgressBar clientProgressBar;
-        private final TextView clientProgressBarText;
         private final ImageView clientDisconnect;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             clientHostname = itemView.findViewById(R.id.clientHostName);
             clientStatus = itemView.findViewById(R.id.clientStatus);
-            clientProgressBar = itemView.findViewById(R.id.clientProgressBar);
-            clientProgressBarText = itemView.findViewById(R.id.clientProgressBarText);
             clientDisconnect = itemView.findViewById(R.id.clientDisconnect);
         }
     }

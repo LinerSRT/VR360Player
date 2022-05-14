@@ -6,6 +6,8 @@
     android:layout_marginStart="16dp"
     android:layout_marginTop="16dp"
     android:layout_marginEnd="18dp"
+    android:background="@drawable/background_round"
+    android:backgroundTint="@color/backgroundSecondaryColorTransparent"
     android:gravity="center_vertical"
     android:orientation="horizontal">
 
@@ -14,9 +16,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:background="@drawable/background_round"
-        android:backgroundTint="@color/backgroundSecondaryColorTransparent"
-
         android:orientation="vertical"
         android:padding="16dp">
 
@@ -32,62 +31,26 @@
             android:textColor="@color/textColor"
             android:textSize="@dimen/textSize"
             android:textStyle="bold|italic" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/clientStatus"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Status:"
-                android:textColor="@color/textSecondaryColor"
-                android:textSize="@dimen/textSecondarySize" />
-
-            <TextView
-                android:id="@+id/clientStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:text="wait for command"
-                android:textColor="@color/primarySecondaryColor"
-                android:textSize="@dimen/textSecondarySize"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <ProgressBar
-                android:id="@+id/clientProgressBar"
-                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:progress="50"
-                android:progressDrawable="@drawable/progressbar_track" />
+            android:drawableStart="@drawable/ic_baseline_info_12"
+            android:drawablePadding="4dp"
+            android:text=""
+            android:textColor="@color/textSecondaryColor"
+            android:textSize="@dimen/textSecondarySize"
+            android:textStyle="bold" />
 
 
-            <TextView
-                android:id="@+id/clientProgressBarText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="123/1234 kb"
-                android:textColor="@color/textSecondaryColor"
-                android:textSize="12sp" />
-        </LinearLayout>
     </LinearLayout>
 
     <ImageView
         android:id="@+id/clientDisconnect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"
         android:padding="8dp"
         android:background="@drawable/circle"
         android:src="@drawable/ic_baseline_clear_24"
